@@ -103,21 +103,30 @@ class ReportGenerator:
             # Collect CRS information
             if not result.error:
                 if result.crs_info:
+                    logger.debug(f"CRS info for {result.filename}: {result.crs_info[:200]}...")
+                    
                     # Parse the CRS info to extract the main coordinate system name
                     crs_name = self._parse_crs_name(result.crs_info)
                     if crs_name:
+                        logger.debug(f"Parsed CRS name: {crs_name}")
                         crs_systems.add(crs_name)
                     
                     # Extract EPSG code from CRS info
                     epsg_code = self._extract_epsg_code(result.crs_info)
                     if epsg_code:
+                        logger.debug(f"Extracted EPSG code: {epsg_code}")
                         epsg_codes.add(epsg_code)
+                    else:
+                        logger.debug(f"No EPSG code found in CRS info")
                 
                 if result.crs_units and result.crs_units != "unknown":
                     crs_units.add(result.crs_units)
         
         logger.debug(f"Total convex hull acreage: {total_convex_hull_acreage:.4f}")
         logger.debug(f"Has convex hull data: {has_convex_hull_data}")
+        logger.debug(f"Collected CRS systems: {list(crs_systems)}")
+        logger.debug(f"Collected CRS units: {list(crs_units)}")
+        logger.debug(f"Collected EPSG codes: {list(epsg_codes)}")
         
         # Create file rows
         file_rows = []
@@ -499,7 +508,7 @@ class ReportGenerator:
     
     def _parse_crs_name(self, crs_info: str) -> str:
         """
-        Parse CRS info to extract the main coordinate system name.
+        Parse CRS info to extract the main coordinate system name from GTCitationGeoKey.
         
         Args:
             crs_info: Raw CRS information string
@@ -510,15 +519,18 @@ class ReportGenerator:
         if not crs_info:
             return None
             
-        # Look for the main coordinate system name in the CRS info
-        # Example: "NAD83(2011) / Maine West (ftUS) + NAVD88 height (ftUS)|NAD83(2011)|NAVD88 height (ftUS)|"
-        parts = crs_info.split('|')
-        if parts:
-            # Take the first part and clean it up
-            main_crs = parts[0].strip()
+        import re
+        
+        # Look for GTCitationGeoKey and extract the coordinate system name after it
+        # Pattern: GTCitationGeoKey: [coordinate system name]
+        pattern = r'GTCitationGeoKey:\s*([^|]+)'
+        match = re.search(pattern, crs_info)
+        
+        if match:
+            crs_name = match.group(1).strip()
             # Remove any trailing "|" or extra whitespace
-            main_crs = main_crs.rstrip('|').strip()
-            return main_crs
+            crs_name = crs_name.rstrip('|').strip()
+            return crs_name
         
         return None
     
@@ -552,6 +564,13 @@ class ReportGenerator:
         
         if projected_matches:
             return projected_matches[0]
+        
+        # Look for EPSG codes in AUTHORITY entries
+        authority_pattern = r'AUTHORITY\["EPSG","(\d+)"\]'
+        authority_matches = re.findall(authority_pattern, crs_info)
+        
+        if authority_matches:
+            return authority_matches[0]
         
         return None
     

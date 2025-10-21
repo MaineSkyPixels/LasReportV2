@@ -49,11 +49,7 @@ def test_enhanced_report():
         print(f"    3rd: {result.returns_3:,}")
         print(f"  Classifications:")
         print(f"    Ground: {result.classification_ground:,}")
-        print(f"    Low Veg: {result.classification_low_vegetation:,}")
-        print(f"    Med Veg: {result.classification_medium_vegetation:,}")
-        print(f"    High Veg: {result.classification_high_vegetation:,}")
-        print(f"    Water: {result.classification_water:,}")
-        print(f"    Building: {result.classification_building:,}")
+        print(f"    Unclassified: {result.classification_unclassified:,}")
     
     # Display aggregates
     print(f"\n\nAggregate Statistics:")
@@ -64,8 +60,7 @@ def test_enhanced_report():
     print(f"    3rd: {aggregate.get('total_returns_3', 0):,}")
     print(f"  Classifications:")
     print(f"    Ground: {aggregate.get('total_classification_ground', 0):,}")
-    print(f"    Vegetation: {aggregate.get('total_classification_low_vegetation', 0) + aggregate.get('total_classification_medium_vegetation', 0) + aggregate.get('total_classification_high_vegetation', 0):,}")
-    print(f"    Water: {aggregate.get('total_classification_water', 0):,}")
+    print(f"    Unclassified: {aggregate.get('total_classification_unclassified', 0):,}")
     print(f"  Scan Angle:")
     print(f"    Min: {aggregate.get('scan_angle_global_min', 0):.1f}°")
     print(f"    Max: {aggregate.get('scan_angle_global_max', 0):.1f}°")

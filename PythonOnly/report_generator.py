@@ -653,7 +653,6 @@ class ReportGenerator:
                         <th>Point Count</th>
                         <th>Ground Points</th>
                         <th>Unclassified Points</th>
-                        <th>Water Points</th>
                         <th>Density (pts/m²)</th>
                         <th>File Size (MB)</th>
                         <th>Acreage (Convex Hull)</th>

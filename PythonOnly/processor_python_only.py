@@ -71,14 +71,6 @@ class LASFileInfo:
     # Classification point counts
     classification_unclassified: int = 0
     classification_ground: int = 0
-    classification_low_vegetation: int = 0
-    classification_medium_vegetation: int = 0
-    classification_high_vegetation: int = 0
-    classification_building: int = 0
-    classification_water: int = 0
-    classification_noise: int = 0
-    classification_key_point: int = 0
-    classification_reserved: int = 0
 
 
 class PythonLASProcessor:
@@ -335,18 +327,11 @@ class PythonLASProcessor:
                                 classification_array = numpy.asarray(las_data.classification, dtype=numpy.int32)
                                 classification_counts = numpy.bincount(classification_array)
                                 # LAS classification codes
-                                file_info.classification_unclassified = int(classification_counts[0]) if len(classification_counts) > 0 else 0
-                                file_info.classification_reserved = int(classification_counts[1]) if len(classification_counts) > 1 else 0
+                                unclassified_0 = int(classification_counts[0]) if len(classification_counts) > 0 else 0
+                                unclassified_1 = int(classification_counts[1]) if len(classification_counts) > 1 else 0
+                                file_info.classification_unclassified = unclassified_0 + unclassified_1
                                 file_info.classification_ground = int(classification_counts[2]) if len(classification_counts) > 2 else 0
-                                file_info.classification_low_vegetation = int(classification_counts[3]) if len(classification_counts) > 3 else 0
-                                file_info.classification_medium_vegetation = int(classification_counts[4]) if len(classification_counts) > 4 else 0
-                                file_info.classification_high_vegetation = int(classification_counts[5]) if len(classification_counts) > 5 else 0
-                                file_info.classification_building = int(classification_counts[6]) if len(classification_counts) > 6 else 0
-                                file_info.classification_water = int(classification_counts[9]) if len(classification_counts) > 9 else 0
-                                file_info.classification_noise = int(classification_counts[7]) if len(classification_counts) > 7 else 0
-                                file_info.classification_key_point = int(classification_counts[8]) if len(classification_counts) > 8 else 0
-                                file_info.classification_reserved = int(classification_counts[1]) if len(classification_counts) > 1 else 0
-                                logger.debug(f"Classification counts: Ground={file_info.classification_ground}, Vegetation={file_info.classification_low_vegetation + file_info.classification_medium_vegetation + file_info.classification_high_vegetation}")
+                                logger.debug(f"Classification counts: Ground={file_info.classification_ground}, Unclassified={file_info.classification_unclassified}")
                             except Exception as e:
                                 logger.debug(f"Error counting classifications: {str(e)}")
                     else:

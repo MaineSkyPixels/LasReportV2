@@ -313,35 +313,25 @@ class LASAnalyzerApp:
             generator = ReportGenerator(str(report_dir))
             
             try:
-                summary_path = generator.generate_summary_report(results, aggregate)
-                self.gui.log_status(f"✓ Summary report: {summary_path.name}")
-                self.logger.info(f"Summary report generated: {summary_path}")
+                report_path = generator.generate_las_report(results, aggregate)
+                self.gui.log_status(f"✓ LAS Report: {report_path.name}")
+                self.logger.info(f"LAS Report generated: {report_path}")
             except Exception as e:
-                error_msg = f"Failed to generate summary report: {str(e)}"
+                error_msg = f"Failed to generate LAS report: {str(e)}"
                 self.gui.log_status(f"❌ {error_msg}")
                 self.logger.error(error_msg)
                 raise
             
-            try:
-                details_path = generator.generate_details_report(results)
-                self.gui.log_status(f"✓ Details report: {details_path.name}")
-                self.logger.info(f"Details report generated: {details_path}")
-            except Exception as e:
-                error_msg = f"Failed to generate details report: {str(e)}"
-                self.gui.log_status(f"❌ {error_msg}")
-                self.logger.error(error_msg)
-                raise
-            
-            # Verify reports exist before showing completion
-            if not summary_path.exists() or not details_path.exists():
-                error_msg = "Reports were not properly written to disk"
+            # Verify report exists before showing completion
+            if not report_path.exists():
+                error_msg = "Report was not properly written to disk"
                 self.gui.show_error(error_msg)
                 self.logger.error(error_msg)
                 return
             
             # Show completion (GUI will calculate processing time from button click)
-            self.gui.log_status("\n✓ All reports generated successfully!")
-            self.gui.show_completion_dialog(summary_path, details_path, aggregate)
+            self.gui.log_status("\n✓ LAS Report generated successfully!")
+            self.gui.show_completion_dialog(report_path, aggregate)
             
             # Log detailed results
             self.logger.info("=" * 80)

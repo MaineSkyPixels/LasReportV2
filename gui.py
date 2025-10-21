@@ -142,17 +142,6 @@ class LASReportGUI:
         )
         acreage_check.pack(side="left", padx=(20, 10), pady=15)
         
-        # Info button for RAM/threading information
-        info_btn = ctk.CTkButton(
-            hull_frame,
-            text="ℹ️ Info",
-            command=self._show_processing_info,
-            width=80,
-            height=30,
-            fg_color="gray60",
-            hover_color="gray50"
-        )
-        info_btn.pack(side="left", padx=(10, 20), pady=15)
         
         # Status and progress frame
         progress_frame = ctk.CTkFrame(main_frame)
@@ -278,7 +267,7 @@ class LASReportGUI:
             fg_color="#1f538d",
             hover_color="#1a4a7a"
         )
-        self.start_btn.pack(side="left", padx=(20, 10), pady=15)
+        self.start_btn.pack(side="right", padx=(10, 20), pady=15)
         
         self.cancel_btn = ctk.CTkButton(
             control_frame,
@@ -314,7 +303,7 @@ class LASReportGUI:
             fg_color="gray60",
             hover_color="gray50"
         )
-        self.theme_btn.pack(side="right", padx=(10, 20), pady=15)
+        self.theme_btn.pack(side="left", padx=(20, 10), pady=15)
         
         exit_btn = ctk.CTkButton(
             control_frame,
@@ -433,134 +422,6 @@ class LASReportGUI:
             self.log_status("✓ Detailed acreage calculation enabled (RAM intensive)")
         else:
             self.log_status("Detailed acreage calculation disabled")
-    
-    def _show_processing_info(self):
-        """Show information dialog about RAM usage and processing."""
-        info_window = ctk.CTkToplevel(self.root)
-        info_window.title("Processing Information")
-        info_window.geometry("700x550")
-        info_window.resizable(False, False)
-        
-        # Make it modal
-        info_window.transient(self.root)
-        info_window.grab_set()
-        
-        # Main frame with padding
-        main_frame = ctk.CTkFrame(info_window)
-        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
-        
-        # Title
-        title_label = ctk.CTkLabel(
-            main_frame,
-            text="Convex Hull Processing & RAM Usage",
-            font=ctk.CTkFont(size=18, weight="bold")
-        )
-        title_label.pack(pady=(0, 20))
-        
-        # Create scrollable text widget
-        info_text = ctk.CTkTextbox(
-            main_frame,
-            font=ctk.CTkFont(size=12),
-            wrap="word"
-        )
-        info_text.pack(fill="both", expand=True, pady=(0, 20))
-        
-        # Info content
-        info_content = """CONVEX HULL ACREAGE CALCULATION
-
-What is it?
-Calculates actual footprint area by analyzing the boundary of point cloud data, rather than using a simple rectangular bounding box.
-
-WHY IT'S RAM INTENSIVE
-
-When convex hull is enabled, the entire LAS file must be loaded into system RAM:
-
-1. File Loading: The complete LAS file loads into memory
-2. Coordinate Extraction: X,Y coordinates are extracted for all points
-3. Hull Calculation: Mathematical analysis finds the outer boundary
-4. Area Calculation: The enclosed area is calculated in acres
-
-For a 5GB LAS file with 200 million points:
-• File in RAM: ~5 GB
-• Coordinate arrays: ~1.6 GB
-• Total RAM needed: ~6.6 GB
-
-INTELLIGENT RAM MANAGEMENT
-
-The system automatically optimizes based on available RAM:
-
-• Minimum 8GB Required: System checks at startup
-• Low RAM Mode: If <8GB available, uses 1% point sampling
-• Smart Decimation: Automatically samples points to fit available RAM
-• No Manual Settings: System handles optimization automatically
-
-Examples:
-• 2GB file + 16GB RAM available = 100% of points used
-• 5GB file + 10GB RAM available = 50% of points used
-• 8GB file + 8GB RAM available = 10% of points used
-
-MULTITHREADING BEHAVIOR
-
-Standard Processing (no convex hull):
-• 12 concurrent threads
-• Fast processing for lasinfo extraction
-• Minimal RAM usage per file
-
-Convex Hull Processing:
-• 4 concurrent threads (automatic)
-• Prevents RAM contention
-• Each file needs full memory allocation
-• Safer for large files
-
-WHY REDUCED THREADS?
-
-With 12 threads and convex hull:
-• 12 files loading simultaneously into RAM
-• Potential RAM exhaustion and crashes
-• System slowdown from memory swapping
-
-With 4 threads and convex hull:
-• Only 4 files in RAM at once
-• Stable memory usage
-• Reliable processing of large files
-• Still faster than single-threaded
-
-ACCURACY WITH POINT SAMPLING
-
-Even at 1% sampling, accuracy remains excellent:
-• 100M points → 1M points still analyzed
-• Convex hull is a boundary operation
-• Sampling doesn't affect boundary accuracy significantly
-• Typically within 0.1% of full calculation
-
-RECOMMENDATIONS
-
-✓ Ensure 8GB+ RAM available before enabling
-✓ Close other memory-intensive applications
-✓ Monitor processing for first few files
-✓ Larger files process slower but safely
-✓ Trust the automatic optimization
-
-The system is designed to maximize accuracy while keeping your system stable and responsive."""
-        
-        info_text.insert("1.0", info_content)
-        info_text.configure(state="disabled")
-        
-        # Close button
-        close_btn = ctk.CTkButton(
-            main_frame,
-            text="Close",
-            command=info_window.destroy,
-            width=120,
-            height=35
-        )
-        close_btn.pack(pady=(10, 0))
-        
-        # Center the window
-        info_window.update_idletasks()
-        x = (info_window.winfo_screenwidth() // 2) - (info_window.winfo_width() // 2)
-        y = (info_window.winfo_screenheight() // 2) - (info_window.winfo_height() // 2)
-        info_window.geometry(f"+{x}+{y}")
     
     def _start_scan(self):
         """Start the scanning process."""
@@ -754,13 +615,12 @@ The system is designed to maximize accuracy while keeping your system stable and
             self.start_btn.configure(state="normal")
             self.cancel_btn.configure(state="disabled")
     
-    def show_completion_dialog(self, summary_path: Path, details_path: Path, aggregate: dict, processing_time: float = None):
+    def show_completion_dialog(self, report_path: Path, aggregate: dict, processing_time: float = None):
         """
         Show enhanced completion dialog with statistics and browser integration.
         
         Args:
-            summary_path: Path to summary report
-            details_path: Path to details report
+            report_path: Path to LAS report
             aggregate: Dictionary with aggregate statistics
             processing_time: Total processing time in seconds (if None, calculate from GUI start time)
         """
@@ -775,7 +635,7 @@ The system is designed to maximize accuracy while keeping your system stable and
         self.cancel_btn.configure(state="disabled")
         
         # Store the report directory and enable the open folder button
-        self.last_report_directory = summary_path.parent
+        self.last_report_directory = report_path.parent
         self.open_folder_btn.configure(state="normal")
         
         # Create completion dialog
@@ -858,7 +718,7 @@ The system is designed to maximize accuracy while keeping your system stable and
         button_frame.pack(fill="x", pady=(0, 5))
         
         def open_in_browser():
-            webbrowser.open(str(summary_path))
+            webbrowser.open(str(report_path))
             dialog.destroy()
         
         def open_folder():

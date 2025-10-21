@@ -141,13 +141,13 @@ class ReportGenerator:
                 <tr>
                     <td>{result.filename}</td>
                     <td>{format_number(result.point_count)}</td>
+                    <td>{format_number(result.returns_1)}/{format_number(result.returns_2)}/{format_number(result.returns_3)}</td>
+                    <td>{format_number(result.classification_ground)}</td>
+                    <td>{format_number(result.classification_low_vegetation + result.classification_medium_vegetation + result.classification_high_vegetation)}</td>
+                    <td>{format_number(result.classification_water)}</td>
+                    <td>{result.scan_angle_min:.1f}° to {result.scan_angle_max:.1f}°</td>
                     <td>{format_number(result.point_density) if result.point_density > 0 else '-'}</td>
-                    <td title="{acreage_method_label}">{acreage_display}</td>
                     <td>{result.file_size_mb:.2f}</td>
-                    <td>{format_number(result.min_x)}</td>
-                    <td>{format_number(result.max_x)}</td>
-                    <td>{format_number(result.min_y)} to {format_number(result.max_y)}</td>
-                    <td title="{result.crs_info}">{crs_display}</td>
                 </tr>
                 """)
         
@@ -575,6 +575,78 @@ class ReportGenerator:
                 </div>
             </div>
             
+            <h2 class="section-title">📊 Returns by Number</h2>
+            <div class="statistics">
+                <div class="stat-card">
+                    <h3>Return 1st</h3>
+                    <div class="stat-value">{format_number(aggregate.get('total_returns_1', 0))}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Return 2nd</h3>
+                    <div class="stat-value">{format_number(aggregate.get('total_returns_2', 0))}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Return 3rd</h3>
+                    <div class="stat-value">{format_number(aggregate.get('total_returns_3', 0))}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Return 4th</h3>
+                    <div class="stat-value">{format_number(aggregate.get('total_returns_4', 0))}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Return 5th</h3>
+                    <div class="stat-value">{format_number(aggregate.get('total_returns_5', 0))}</div>
+                </div>
+            </div>
+            
+            <h2 class="section-title">🏷️ Point Classifications</h2>
+            <div class="statistics">
+                <div class="stat-card">
+                    <h3>Ground</h3>
+                    <div class="stat-value">{format_number(aggregate.get('total_classification_ground', 0))}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Unclassified</h3>
+                    <div class="stat-value">{format_number(aggregate.get('total_classification_unclassified', 0))}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Low Vegetation</h3>
+                    <div class="stat-value">{format_number(aggregate.get('total_classification_low_vegetation', 0))}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Medium Vegetation</h3>
+                    <div class="stat-value">{format_number(aggregate.get('total_classification_medium_vegetation', 0))}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>High Vegetation</h3>
+                    <div class="stat-value">{format_number(aggregate.get('total_classification_high_vegetation', 0))}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Building</h3>
+                    <div class="stat-value">{format_number(aggregate.get('total_classification_building', 0))}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Water</h3>
+                    <div class="stat-value">{format_number(aggregate.get('total_classification_water', 0))}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Noise</h3>
+                    <div class="stat-value">{format_number(aggregate.get('total_classification_noise', 0))}</div>
+                </div>
+            </div>
+            
+            <h2 class="section-title">🎯 Scan Angle Information</h2>
+            <div class="statistics">
+                <div class="stat-card">
+                    <h3>Minimum Angle</h3>
+                    <div class="stat-value">{aggregate.get('scan_angle_global_min', 0):.2f}°</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Maximum Angle</h3>
+                    <div class="stat-value">{aggregate.get('scan_angle_global_max', 0):.2f}°</div>
+                </div>
+            </div>
+            
             <div class="bounds-container">
                 <div class="bounds-section">
                     <h4>🗺️ Geographic Bounds (All Files)</h4>
@@ -597,13 +669,13 @@ class ReportGenerator:
                     <tr>
                         <th>Filename</th>
                         <th>Point Count</th>
+                        <th>Returns<br/>(1st/2nd/3rd)</th>
+                        <th>Ground<br/>Points</th>
+                        <th>Vegetation<br/>Points</th>
+                        <th>Water<br/>Points</th>
+                        <th>Scan Angle<br/>Range</th>
                         <th>Density (pts/m²)</th>
-                        <th>Acreage</th>
                         <th>File Size (MB)</th>
-                        <th>X Min</th>
-                        <th>X Max</th>
-                        <th>Y Range</th>
-                        <th>CRS</th>
                     </tr>
                 </thead>
                 <tbody>

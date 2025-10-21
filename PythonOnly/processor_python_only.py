@@ -60,6 +60,29 @@ class LASFileInfo:
     file_size_mb: float = 0.0
     processing_time: float = 0.0
     error: Optional[str] = None
+    
+    # Return point counts
+    returns_1: int = 0
+    returns_2: int = 0
+    returns_3: int = 0
+    returns_4: int = 0
+    returns_5: int = 0
+    
+    # Classification point counts
+    classification_unclassified: int = 0
+    classification_ground: int = 0
+    classification_low_vegetation: int = 0
+    classification_medium_vegetation: int = 0
+    classification_high_vegetation: int = 0
+    classification_building: int = 0
+    classification_water: int = 0
+    classification_noise: int = 0
+    classification_key_point: int = 0
+    classification_reserved: int = 0
+    
+    # Scan angle information
+    scan_angle_min: float = 0.0
+    scan_angle_max: float = 0.0
 
 
 class PythonLASProcessor:
@@ -223,6 +246,26 @@ class PythonLASProcessor:
             'overall_max_y': overall_max_y,
             'overall_min_z': overall_min_z,
             'overall_max_z': overall_max_z,
+            # Return counts aggregates
+            'total_returns_1': sum(r.returns_1 for r in valid_results),
+            'total_returns_2': sum(r.returns_2 for r in valid_results),
+            'total_returns_3': sum(r.returns_3 for r in valid_results),
+            'total_returns_4': sum(r.returns_4 for r in valid_results),
+            'total_returns_5': sum(r.returns_5 for r in valid_results),
+            # Classification counts aggregates
+            'total_classification_unclassified': sum(r.classification_unclassified for r in valid_results),
+            'total_classification_ground': sum(r.classification_ground for r in valid_results),
+            'total_classification_low_vegetation': sum(r.classification_low_vegetation for r in valid_results),
+            'total_classification_medium_vegetation': sum(r.classification_medium_vegetation for r in valid_results),
+            'total_classification_high_vegetation': sum(r.classification_high_vegetation for r in valid_results),
+            'total_classification_building': sum(r.classification_building for r in valid_results),
+            'total_classification_water': sum(r.classification_water for r in valid_results),
+            'total_classification_noise': sum(r.classification_noise for r in valid_results),
+            'total_classification_key_point': sum(r.classification_key_point for r in valid_results),
+            'total_classification_reserved': sum(r.classification_reserved for r in valid_results),
+            # Scan angle aggregates
+            'scan_angle_global_min': min((r.scan_angle_min for r in valid_results), default=0.0),
+            'scan_angle_global_max': max((r.scan_angle_max for r in valid_results), default=0.0),
         }
     
     def _process_single_file(self, filepath: Path, progress_callback: Optional[Callable] = None) -> LASFileInfo:
@@ -277,6 +320,51 @@ class PythonLASProcessor:
                 # Extract CRS information from Variable Length Records (VLRs)
                 file_info.crs_info, file_info.crs_units = self._extract_crs_info(header.vlrs, header)
                 logger.debug(f"CRS info: '{file_info.crs_info}', Units: '{file_info.crs_units}'")
+                
+                # Read point data to extract classifications and returns
+                try:
+                    las_data = las_file.read()
+                    
+                    # Extract return counts
+                    if hasattr(las_data, 'return_num'):
+                        return_counts = {}
+                        for return_num in las_data.return_num:
+                            return_counts[return_num] = return_counts.get(return_num, 0) + 1
+                        
+                        file_info.returns_1 = return_counts.get(1, 0)
+                        file_info.returns_2 = return_counts.get(2, 0)
+                        file_info.returns_3 = return_counts.get(3, 0)
+                        file_info.returns_4 = return_counts.get(4, 0)
+                        file_info.returns_5 = return_counts.get(5, 0)
+                        logger.debug(f"Return counts: R1={file_info.returns_1}, R2={file_info.returns_2}, R3={file_info.returns_3}, R4={file_info.returns_4}, R5={file_info.returns_5}")
+                    
+                    # Extract classification counts
+                    if hasattr(las_data, 'classification'):
+                        classification_counts = {}
+                        for classification in las_data.classification:
+                            classification_counts[classification] = classification_counts.get(classification, 0) + 1
+                        
+                        # LAS classification codes
+                        file_info.classification_unclassified = classification_counts.get(0, 0)
+                        file_info.classification_ground = classification_counts.get(2, 0)
+                        file_info.classification_low_vegetation = classification_counts.get(3, 0)
+                        file_info.classification_medium_vegetation = classification_counts.get(4, 0)
+                        file_info.classification_high_vegetation = classification_counts.get(5, 0)
+                        file_info.classification_building = classification_counts.get(6, 0)
+                        file_info.classification_water = classification_counts.get(9, 0)
+                        file_info.classification_noise = classification_counts.get(7, 0)
+                        file_info.classification_key_point = classification_counts.get(8, 0)
+                        file_info.classification_reserved = classification_counts.get(1, 0)
+                        logger.debug(f"Classification counts: Ground={file_info.classification_ground}, Vegetation={file_info.classification_low_vegetation + file_info.classification_medium_vegetation + file_info.classification_high_vegetation}")
+                    
+                    # Extract scan angle information
+                    if hasattr(las_data, 'scan_angle_rank'):
+                        file_info.scan_angle_min = float(las_data.scan_angle_rank.min())
+                        file_info.scan_angle_max = float(las_data.scan_angle_rank.max())
+                        logger.debug(f"Scan angle range: {file_info.scan_angle_min} to {file_info.scan_angle_max}")
+                    
+                except Exception as e:
+                    logger.warning(f"Error extracting point data: {str(e)}")
                 
                 # Calculate point density
                 if file_info.min_x != file_info.max_x and file_info.min_y != file_info.max_y and file_info.point_count > 0:

@@ -2,7 +2,7 @@
 
 **Last Updated**: October 21, 2025  
 **Status**: ✅ Production Ready  
-**Version**: 4.0.1 (Enterprise Edition)
+**Version**: 4.0.2 (Enterprise Edition)
 
 ---
 
@@ -762,6 +762,27 @@ Log File (detailed):
 
 ---
 
-**Last Updated**: October 20, 2025  
+## 6. Latest Updates (October 21, 2025)
+
+### 6.1 GUI Improvements
+- **Button Layout**: Swapped Start scan and Dark/Light button positions for better workflow
+- **Theme Toggle**: Fixed Dark/Light button to properly toggle between dark and light themes
+- **Interface Cleanup**: Removed processing information info button and associated window for cleaner interface
+
+### 6.2 Report Consolidation
+- **Combined Reports**: Merged lasdetail HTML report into las summary report for unified experience
+- **New Report Name**: Renamed to "Las Report" (LasReport-timestamp.html)
+- **Enhanced Content**: Added detailed file information section with expandable lasinfo output
+- **Single Report**: Eliminated separate details report generation for streamlined workflow
+
+### 6.3 Technical Enhancements
+- **Report Generator**: Updated to generate single comprehensive report
+- **Expandable Sections**: Added JavaScript functionality for toggleable detailed content
+- **CSS Styling**: Enhanced styling for detailed file sections with professional appearance
+- **Code Optimization**: Streamlined report generation process and reduced complexity
+
+---
+
+**Last Updated**: October 21, 2025  
 **Status**: ✅ Production Ready  
 **All Features**: ✅ Complete and Verified

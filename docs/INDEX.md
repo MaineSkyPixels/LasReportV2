@@ -155,6 +155,9 @@ Supporting documentation and reference guides.
 Chronological reports of development sessions.
 
 ### October 2025 Sessions
+- **[SESSION_OCTOBER_21_2025_GUI_AND_REPORT_UPDATES.md](session-reports/SESSION_OCTOBER_21_2025_GUI_AND_REPORT_UPDATES.md)**  
+  GUI improvements, button layout changes, and report consolidation - October 21, 2025
+  
 - **[SESSION_OCTOBER_21_2025_GUI_MODERNIZATION.md](session-reports/SESSION_OCTOBER_21_2025_GUI_MODERNIZATION.md)**  
   GUI modernization, processing time fix, and font size improvements - October 21, 2025
   
@@ -210,6 +213,7 @@ Chronological reports of development sessions.
 - [Current Features](primary/CURRENT_FEATURES.md)
 
 **GUI and User Experience:**
+- [GUI and Report Updates](session-reports/SESSION_OCTOBER_21_2025_GUI_AND_REPORT_UPDATES.md)
 - [GUI Modernization](advanced-features/GUI_MODERNIZATION_AND_READABILITY.md)
 - [Current Features](primary/CURRENT_FEATURES.md)
 

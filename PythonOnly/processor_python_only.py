@@ -111,7 +111,11 @@ class PythonLASProcessor:
             aggregate = self._calculate_aggregates(error_results)
             return error_results, aggregate
         
+        import logging
+        logger = logging.getLogger("LASAnalysis")
+        
         results = []
+        logger.info(f"Starting Python-based file processing with {self.max_workers} threads")
         
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             # Submit all files for processing
@@ -121,6 +125,7 @@ class PythonLASProcessor:
             }
             
             # Collect results as they complete
+            completed = 0
             for future in as_completed(future_to_path):
                 if self.cancel_event.is_set():
                     # Cancel remaining tasks
@@ -131,13 +136,25 @@ class PythonLASProcessor:
                 try:
                     result = future.result()
                     results.append(result)
+                    completed += 1
+                    
+                    # Call progress callback for main progress updates
+                    if progress_callback:
+                        progress_callback(completed, len(file_paths), result.filename)
+                        
                 except Exception as e:
                     path = future_to_path[future]
-                    results.append(LASFileInfo(
+                    error_result = LASFileInfo(
                         filename=path.name,
                         filepath=path,
                         error=f"Processing failed: {str(e)}"
-                    ))
+                    )
+                    results.append(error_result)
+                    completed += 1
+                    
+                    # Call progress callback even for failed files
+                    if progress_callback:
+                        progress_callback(completed, len(file_paths), path.name)
         
         # Sort results by filename
         results.sort(key=lambda x: x.filename)
@@ -219,12 +236,17 @@ class PythonLASProcessor:
         Returns:
             LASFileInfo object with file information
         """
+        import logging
+        logger = logging.getLogger("LASAnalysis")
+        
         start_time = datetime.now()
         file_info = LASFileInfo(
             filename=filepath.name,
             filepath=filepath,
             file_size_mb=filepath.stat().st_size / (1024 * 1024)
         )
+        
+        logger.info(f"Processing {filepath.name} ({file_info.file_size_mb:.1f} MB) using Python libraries")
         
         try:
             # Open LAS file with laspy
@@ -254,17 +276,23 @@ class PythonLASProcessor:
                 
                 # Extract CRS information from Variable Length Records (VLRs)
                 file_info.crs_info, file_info.crs_units = self._extract_crs_info(header.vlrs, header)
+                logger.debug(f"CRS info: '{file_info.crs_info}', Units: '{file_info.crs_units}'")
                 
                 # Calculate point density
                 if file_info.min_x != file_info.max_x and file_info.min_y != file_info.max_y and file_info.point_count > 0:
                     file_info.point_density = self._calculate_point_density(file_info)
+                    logger.debug(f"Point density calculated: {file_info.point_density:.2f} pts/m²")
                 
                 # Generate Python-based summary (replaces lasinfo output)
                 file_info.raw_output = self._generate_python_summary(file_info, header)
                 
                 # Calculate convex hull acreage if requested
                 if self.use_detailed_acreage and HAS_SCIPY and HAS_NUMPY:
+                    logger.info(f"Calculating convex hull acreage for {filepath.name}")
                     self._calculate_convex_hull_acreage(filepath, file_info, progress_callback)
+                    logger.info(f"Convex hull result: acreage_detailed={file_info.acreage_detailed:.2f}")
+                else:
+                    logger.debug(f"Skipping convex hull calculation (use_detailed_acreage={self.use_detailed_acreage}, HAS_SCIPY={HAS_SCIPY}, HAS_NUMPY={HAS_NUMPY})")
                 
         except Exception as e:
             file_info.error = f"Error reading LAS file: {str(e)}"
@@ -520,9 +548,13 @@ class PythonLASProcessor:
         if not HAS_LASPY or not HAS_SCIPY or not HAS_NUMPY:
             return
         
+        import logging
+        logger = logging.getLogger("LASAnalysis")
+        
         try:
             # Read the LAS file and extract X, Y coordinates
             file_size_mb = filepath.stat().st_size / (1024 * 1024)
+            logger.info(f"Reading {filepath.name} ({file_size_mb:.0f}MB) for convex hull calculation...")
             
             if progress_callback:
                 progress_callback("sub_progress", "dummy", f"Reading {filepath.name} ({file_size_mb:.0f}MB) for convex hull calculation...")
@@ -531,8 +563,10 @@ class PythonLASProcessor:
                 # Read all points
                 las_data = las_file.read()
                 point_count = len(las_data)
+                logger.debug(f"Loaded {point_count:,} points from LAS file")
                 
                 if point_count == 0:
+                    logger.warning(f"No points found in {filepath.name}")
                     return
                 
                 if progress_callback:
@@ -540,6 +574,7 @@ class PythonLASProcessor:
                 
                 # Extract X and Y coordinates only
                 points_xy = numpy.column_stack((las_data.x, las_data.y))
+                logger.debug(f"Extracted {len(points_xy):,} X,Y coordinate pairs")
                 
                 if progress_callback:
                     progress_callback("sub_progress", "dummy", "Computing convex hull...")
@@ -547,12 +582,14 @@ class PythonLASProcessor:
                 # Compute convex hull
                 hull = ConvexHull(points_xy)
                 hull_points = points_xy[hull.vertices]
+                logger.debug(f"Convex hull computed with {len(hull_points)} vertices")
                 
                 if progress_callback:
                     progress_callback("sub_progress", "dummy", "Calculating area...")
                 
                 # Calculate area using shoelace formula
                 area = self._polygon_area(hull_points)
+                logger.debug(f"Convex hull area calculated: {area:.2f} square units")
                 
                 # Convert to acres based on CRS units
                 if area > 0:
@@ -581,9 +618,11 @@ class PythonLASProcessor:
                     
                     if area_sq_meters > 0:
                         file_info.point_density = file_info.point_count / area_sq_meters
+                        logger.debug(f"Updated point density based on convex hull: {file_info.point_density:.2f} pts/m²")
                 
         except Exception as e:
             # If convex hull calculation fails, continue without it
+            logger.error(f"{filepath.name}: Error calculating convex hull: {str(e)}")
             pass
     
     def _polygon_area(self, vertices: List[List[float]]) -> float:

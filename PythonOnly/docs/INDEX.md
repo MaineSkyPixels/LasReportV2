@@ -155,6 +155,9 @@ Supporting documentation and reference guides.
 Chronological reports of development sessions.
 
 ### October 2025 Sessions
+- **[SESSION_OCT21_CLASSIFICATION_FIXES.md](session-reports/SESSION_OCT21_CLASSIFICATION_FIXES.md)**  
+  Classification simplification, scan angle removal, and report alignment fixes - October 21, 2025
+  
 - **[SESSION_OCTOBER_21_2025_GUI_AND_REPORT_UPDATES.md](session-reports/SESSION_OCTOBER_21_2025_GUI_AND_REPORT_UPDATES.md)**  
   GUI improvements, button layout changes, and report consolidation - October 21, 2025
   

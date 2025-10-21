@@ -90,10 +90,21 @@ class ReportGenerator:
         total_convex_hull_acreage = 0.0
         has_convex_hull_data = False
         
+        # Collect coordinate system information
+        crs_systems = set()
+        crs_units = set()
+        
         for result in results:
             if not result.error and result.acreage_detailed > 0:
                 total_convex_hull_acreage += result.acreage_detailed
                 has_convex_hull_data = True
+            
+            # Collect CRS information
+            if not result.error:
+                if result.crs_info:
+                    crs_systems.add(result.crs_info)
+                if result.crs_units and result.crs_units != "unknown":
+                    crs_units.add(result.crs_units)
         
         logger.debug(f"Total convex hull acreage: {total_convex_hull_acreage:.4f}")
         logger.debug(f"Has convex hull data: {has_convex_hull_data}")
@@ -208,15 +219,15 @@ class ReportGenerator:
         
         .statistics {{
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
         }}
         
         .stat-card {{
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }}
@@ -316,6 +327,42 @@ class ReportGenerator:
             font-family: 'Courier New', monospace;
         }}
         
+        .bounds-container {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }}
+        
+        .bounds-section {{
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }}
+        
+        .bounds-section h4 {{
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 1.1em;
+            font-weight: 600;
+        }}
+        
+        .bounds-section p {{
+            margin: 8px 0;
+            color: #333;
+        }}
+        
+        .crs-info {{
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #2196f3;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }}
+        
         @media (max-width: 768px) {{
             .container {{
                 border-radius: 0;
@@ -343,6 +390,11 @@ class ReportGenerator:
             
             th, td {{
                 padding: 8px 10px;
+            }}
+            
+            .bounds-container {{
+                grid-template-columns: 1fr;
+                gap: 20px;
             }}
         }}
     </style>
@@ -389,11 +441,18 @@ class ReportGenerator:
                 </div>
             </div>
             
-            <div class="scan-info" style="margin-top: 20px;">
-                <p><strong>Geographic Bounds (All Files):</strong></p>
-                <p>X: <span class="bounds-highlight">{format_number(aggregate['overall_min_x'])}</span> to <span class="bounds-highlight">{format_number(aggregate['overall_max_x'])}</span></p>
-                <p>Y: <span class="bounds-highlight">{format_number(aggregate['overall_min_y'])}</span> to <span class="bounds-highlight">{format_number(aggregate['overall_max_y'])}</span></p>
-                <p>Z: <span class="bounds-highlight">{format_number(aggregate['overall_min_z'])}</span> to <span class="bounds-highlight">{format_number(aggregate['overall_max_z'])}</span></p>
+            <div class="bounds-container">
+                <div class="bounds-section">
+                    <h4>🗺️ Geographic Bounds (All Files)</h4>
+                    <p>X: <span class="bounds-highlight">{format_number(aggregate['overall_min_x'])}</span> to <span class="bounds-highlight">{format_number(aggregate['overall_max_x'])}</span></p>
+                    <p>Y: <span class="bounds-highlight">{format_number(aggregate['overall_min_y'])}</span> to <span class="bounds-highlight">{format_number(aggregate['overall_max_y'])}</span></p>
+                    <p>Z: <span class="bounds-highlight">{format_number(aggregate['overall_min_z'])}</span> to <span class="bounds-highlight">{format_number(aggregate['overall_max_z'])}</span></p>
+                </div>
+                <div class="bounds-section">
+                    <h4>🌐 Coordinate Reference System</h4>
+                    {f'<div class="crs-info"><strong>Units:</strong> {", ".join(sorted(crs_units)) if crs_units else "Unknown"}</div>' if crs_units else '<p style="color: #666; font-style: italic;">No coordinate system information available</p>'}
+                    {f'<div class="crs-info" style="margin-top: 10px;"><strong>System:</strong><br>{list(crs_systems)[0] if len(crs_systems) == 1 else "Multiple systems detected"}</div>' if crs_systems else ""}
+                </div>
             </div>
             
             <h2 class="section-title">📄 Individual File Details</h2>

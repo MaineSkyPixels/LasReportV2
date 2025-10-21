@@ -93,6 +93,7 @@ class ReportGenerator:
         # Collect coordinate system information
         crs_systems = set()
         crs_units = set()
+        epsg_codes = set()
         
         for result in results:
             if not result.error and result.acreage_detailed > 0:
@@ -102,7 +103,16 @@ class ReportGenerator:
             # Collect CRS information
             if not result.error:
                 if result.crs_info:
-                    crs_systems.add(result.crs_info)
+                    # Parse the CRS info to extract the main coordinate system name
+                    crs_name = self._parse_crs_name(result.crs_info)
+                    if crs_name:
+                        crs_systems.add(crs_name)
+                    
+                    # Extract EPSG code from CRS info
+                    epsg_code = self._extract_epsg_code(result.crs_info)
+                    if epsg_code:
+                        epsg_codes.add(epsg_code)
+                
                 if result.crs_units and result.crs_units != "unknown":
                     crs_units.add(result.crs_units)
         
@@ -452,6 +462,7 @@ class ReportGenerator:
                     <h4>🌐 Coordinate Reference System</h4>
                     {f'<div class="crs-info"><strong>Units:</strong> {", ".join(sorted(crs_units)) if crs_units else "Unknown"}</div>' if crs_units else '<p style="color: #666; font-style: italic;">No coordinate system information available</p>'}
                     {f'<div class="crs-info" style="margin-top: 10px;"><strong>System:</strong><br>{list(crs_systems)[0] if len(crs_systems) == 1 else "Multiple systems detected"}</div>' if crs_systems else ""}
+                    {f'<div class="crs-info" style="margin-top: 10px;"><strong>EPSG Code:</strong> {", ".join(sorted(epsg_codes)) if epsg_codes else "Not available"}</div>' if epsg_codes else ""}
                 </div>
             </div>
             
@@ -485,6 +496,64 @@ class ReportGenerator:
         """
         
         return html_template
+    
+    def _parse_crs_name(self, crs_info: str) -> str:
+        """
+        Parse CRS info to extract the main coordinate system name.
+        
+        Args:
+            crs_info: Raw CRS information string
+            
+        Returns:
+            Cleaned coordinate system name or None
+        """
+        if not crs_info:
+            return None
+            
+        # Look for the main coordinate system name in the CRS info
+        # Example: "NAD83(2011) / Maine West (ftUS) + NAVD88 height (ftUS)|NAD83(2011)|NAVD88 height (ftUS)|"
+        parts = crs_info.split('|')
+        if parts:
+            # Take the first part and clean it up
+            main_crs = parts[0].strip()
+            # Remove any trailing "|" or extra whitespace
+            main_crs = main_crs.rstrip('|').strip()
+            return main_crs
+        
+        return None
+    
+    def _extract_epsg_code(self, crs_info: str) -> str:
+        """
+        Extract EPSG code from CRS information.
+        
+        Args:
+            crs_info: Raw CRS information string
+            
+        Returns:
+            EPSG code as string or None
+        """
+        if not crs_info:
+            return None
+            
+        import re
+        
+        # Look for EPSG codes in the CRS info
+        # Pattern to match EPSG codes like "EPSG","6486"
+        epsg_pattern = r'"EPSG","(\d+)"'
+        matches = re.findall(epsg_pattern, crs_info)
+        
+        if matches:
+            # Return the first EPSG code found
+            return matches[0]
+        
+        # Also look for patterns like "value_offset 6486" in ProjectedCSTypeGeoKey
+        projected_pattern = r'ProjectedCSTypeGeoKey.*?value_offset\s+(\d+)'
+        projected_matches = re.findall(projected_pattern, crs_info)
+        
+        if projected_matches:
+            return projected_matches[0]
+        
+        return None
     
     def _generate_details_html(self, results: List[LASFileInfo]) -> str:
         """Generate the HTML content for the details report."""

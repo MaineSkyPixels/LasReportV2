@@ -93,7 +93,6 @@ class ReportGenerator:
         # Collect coordinate system information
         crs_systems = set()
         crs_units = set()
-        epsg_codes = set()
         
         for result in results:
             if not result.error and result.acreage_detailed > 0:
@@ -110,14 +109,6 @@ class ReportGenerator:
                     if crs_name:
                         logger.debug(f"Parsed CRS name: {crs_name}")
                         crs_systems.add(crs_name)
-                    
-                    # Extract EPSG code from CRS info
-                    epsg_code = self._extract_epsg_code(result.crs_info)
-                    if epsg_code:
-                        logger.debug(f"Extracted EPSG code: {epsg_code}")
-                        epsg_codes.add(epsg_code)
-                    else:
-                        logger.debug(f"No EPSG code found in CRS info")
                 
                 if result.crs_units and result.crs_units != "unknown":
                     crs_units.add(result.crs_units)
@@ -126,7 +117,6 @@ class ReportGenerator:
         logger.debug(f"Has convex hull data: {has_convex_hull_data}")
         logger.debug(f"Collected CRS systems: {list(crs_systems)}")
         logger.debug(f"Collected CRS units: {list(crs_units)}")
-        logger.debug(f"Collected EPSG codes: {list(epsg_codes)}")
         
         # Create file rows
         file_rows = []
@@ -471,7 +461,6 @@ class ReportGenerator:
                     <h4>🌐 Coordinate Reference System</h4>
                     {f'<div class="crs-info"><strong>Units:</strong> {", ".join(sorted(crs_units)) if crs_units else "Unknown"}</div>' if crs_units else '<p style="color: #666; font-style: italic;">No coordinate system information available</p>'}
                     {f'<div class="crs-info" style="margin-top: 10px;"><strong>System:</strong><br>{list(crs_systems)[0] if len(crs_systems) == 1 else "Multiple systems detected"}</div>' if crs_systems else ""}
-                    {f'<div class="crs-info" style="margin-top: 10px;"><strong>EPSG Code:</strong> {", ".join(sorted(epsg_codes)) if epsg_codes else "Not available"}</div>' if epsg_codes else ""}
                 </div>
             </div>
             
@@ -532,65 +521,6 @@ class ReportGenerator:
             crs_name = crs_name.rstrip('|').strip()
             return crs_name
         
-        return None
-    
-    def _extract_epsg_code(self, crs_info: str) -> str:
-        """
-        Extract EPSG code from CRS information.
-        
-        Args:
-            crs_info: Raw CRS information string
-            
-        Returns:
-            EPSG code as string or None
-        """
-        if not crs_info:
-            return None
-            
-        import re
-        
-        # Debug: Print the CRS info to see what we're working with
-        print(f"DEBUG: Full CRS info: {crs_info}")
-        
-        # Look for EPSG codes in the CRS info
-        # Pattern to match EPSG codes like "EPSG","6486"
-        epsg_pattern = r'"EPSG","(\d+)"'
-        matches = re.findall(epsg_pattern, crs_info)
-        
-        if matches:
-            print(f"DEBUG: Found EPSG pattern match: {matches[0]}")
-            return matches[0]
-        
-        # Look for patterns like "value_offset 6486" in ProjectedCSTypeGeoKey
-        projected_pattern = r'ProjectedCSTypeGeoKey.*?value_offset\s+(\d+)'
-        projected_matches = re.findall(projected_pattern, crs_info)
-        
-        if projected_matches:
-            print(f"DEBUG: Found ProjectedCSTypeGeoKey match: {projected_matches[0]}")
-            return projected_matches[0]
-        
-        # Look for EPSG codes in AUTHORITY entries
-        authority_pattern = r'AUTHORITY\["EPSG","(\d+)"\]'
-        authority_matches = re.findall(authority_pattern, crs_info)
-        
-        if authority_matches:
-            print(f"DEBUG: Found AUTHORITY match: {authority_matches[0]}")
-            return authority_matches[0]
-        
-        # Look for any 4-digit number that could be an EPSG code
-        # This is a fallback pattern
-        fallback_pattern = r'\b(\d{4,5})\b'
-        fallback_matches = re.findall(fallback_pattern, crs_info)
-        
-        if fallback_matches:
-            # Filter out common non-EPSG numbers
-            for match in fallback_matches:
-                code = int(match)
-                if 2000 <= code <= 99999:  # Reasonable EPSG code range
-                    print(f"DEBUG: Found fallback EPSG code: {match}")
-                    return match
-        
-        print("DEBUG: No EPSG code found")
         return None
     
     def _generate_details_html(self, results: List[LASFileInfo]) -> str:

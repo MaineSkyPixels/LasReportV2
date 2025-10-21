@@ -539,8 +539,8 @@ class LASProcessor:
                 if len(parts) > 1:
                     file_info.point_format = f"Format {parts[1].strip()}"
             
-            # CRS/EPSG information - collect full context
-            if any(term in line for term in ['EPSG', 'NAD83', 'WGS', 'ProjLinearUnitsGeoKey', 'ProjectedCSTypeGeoKey', 'Linear_Foot', 'US survey foot', 'GTCitationGeoKey']):
+            # CRS information - collect coordinate system context
+            if any(term in line for term in ['NAD83', 'WGS', 'ProjLinearUnitsGeoKey', 'Linear_Foot', 'US survey foot', 'GTCitationGeoKey']):
                 crs_lines.append(line_stripped)
             
             # Detect coordinate system units

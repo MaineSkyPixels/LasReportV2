@@ -54,7 +54,6 @@ def test_enhanced_report():
         print(f"    High Veg: {result.classification_high_vegetation:,}")
         print(f"    Water: {result.classification_water:,}")
         print(f"    Building: {result.classification_building:,}")
-        print(f"  Scan Angle Range: {result.scan_angle_min:.1f}° to {result.scan_angle_max:.1f}°")
     
     # Display aggregates
     print(f"\n\nAggregate Statistics:")

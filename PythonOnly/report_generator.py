@@ -165,8 +165,6 @@ class ReportGenerator:
                     <td>{format_number(result.returns_3)}</td>
                     <td>{format_number(result.returns_4)}</td>
                     <td>{format_number(result.returns_5)}</td>
-                    <td>{result.scan_angle_min:.1f}°</td>
-                    <td>{result.scan_angle_max:.1f}°</td>
                 </tr>
                 """)
         
@@ -655,18 +653,7 @@ class ReportGenerator:
                 </div>
             </div>
             
-            <h2 class="section-title">🎯 Scan Angle Information</h2>
-            <div class="statistics">
-                <div class="stat-card">
-                    <h3>Minimum Angle</h3>
-                    <div class="stat-value">{aggregate.get('scan_angle_global_min', 0):.2f}°</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Maximum Angle</h3>
-                    <div class="stat-value">{aggregate.get('scan_angle_global_max', 0):.2f}°</div>
-                </div>
-            </div>
-            
+            <h2 class="section-title">🗺️ Geographic Bounds (All Files)</h2>
             <div class="bounds-container">
                 <div class="bounds-section">
                     <h4>🗺️ Geographic Bounds (All Files)</h4>
@@ -702,7 +689,7 @@ class ReportGenerator:
                 </tbody>
             </table>
             
-            <h2 class="section-title">📊 Return Counts & Scan Angles (by File)</h2>
+            <h2 class="section-title">📊 Return Counts (by File)</h2>
             <table>
                 <thead>
                     <tr>
@@ -712,8 +699,8 @@ class ReportGenerator:
                         <th>Return 3rd</th>
                         <th>Return 4th</th>
                         <th>Return 5th</th>
-                        <th>Scan Angle Min</th>
-                        <th>Scan Angle Max</th>
+                        
+                        
                     </tr>
                 </thead>
                 <tbody>

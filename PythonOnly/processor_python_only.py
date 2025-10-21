@@ -79,10 +79,6 @@ class LASFileInfo:
     classification_noise: int = 0
     classification_key_point: int = 0
     classification_reserved: int = 0
-    
-    # Scan angle information
-    scan_angle_min: float = 0.0
-    scan_angle_max: float = 0.0
 
 
 class PythonLASProcessor:
@@ -265,9 +261,6 @@ class PythonLASProcessor:
             'total_classification_noise': sum(r.classification_noise for r in valid_results),
             'total_classification_key_point': sum(r.classification_key_point for r in valid_results),
             'total_classification_reserved': sum(r.classification_reserved for r in valid_results),
-            # Scan angle aggregates
-            'scan_angle_global_min': min((r.scan_angle_min for r in valid_results), default=0.0),
-            'scan_angle_global_max': max((r.scan_angle_max for r in valid_results), default=0.0),
         }
     
     def _process_single_file(self, filepath: Path, progress_callback: Optional[Callable] = None) -> LASFileInfo:
@@ -363,15 +356,6 @@ class PythonLASProcessor:
                                 logger.debug(f"Classification counts: Ground={file_info.classification_ground}, Vegetation={file_info.classification_low_vegetation + file_info.classification_medium_vegetation + file_info.classification_high_vegetation}")
                             except Exception as e:
                                 logger.debug(f"Error counting classifications: {str(e)}")
-                        
-                        # Extract scan angle information
-                        if hasattr(las_data, 'scan_angle_rank'):
-                            try:
-                                file_info.scan_angle_min = float(numpy.min(las_data.scan_angle_rank))
-                                file_info.scan_angle_max = float(numpy.max(las_data.scan_angle_rank))
-                                logger.debug(f"Scan angle range: {file_info.scan_angle_min} to {file_info.scan_angle_max}")
-                            except Exception as e:
-                                logger.debug(f"Error extracting scan angles: {str(e)}")
                     else:
                         # Only read if needed for convex hull
                         if self.use_detailed_acreage:

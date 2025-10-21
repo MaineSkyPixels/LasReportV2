@@ -148,8 +148,7 @@ class ReportGenerator:
                     <td>{result.filename}</td>
                     <td>{format_number(result.point_count)}</td>
                     <td>{format_number(result.classification_ground)}</td>
-                    <td>{format_number(result.classification_low_vegetation + result.classification_medium_vegetation + result.classification_high_vegetation)}</td>
-                    <td>{format_number(result.classification_water)}</td>
+                    <td>{format_number(result.classification_unclassified)}</td>
                     <td>{format_number(result.point_density) if result.point_density > 0 else '-'}</td>
                     <td>{result.file_size_mb:.2f}</td>
                     <td title="{acreage_method_label}">{acreage_display}</td>
@@ -627,30 +626,6 @@ class ReportGenerator:
                     <h3>Unclassified</h3>
                     <div class="stat-value">{format_number(aggregate.get('total_classification_unclassified', 0))}</div>
                 </div>
-                <div class="stat-card">
-                    <h3>Low Vegetation</h3>
-                    <div class="stat-value">{format_number(aggregate.get('total_classification_low_vegetation', 0))}</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Medium Vegetation</h3>
-                    <div class="stat-value">{format_number(aggregate.get('total_classification_medium_vegetation', 0))}</div>
-                </div>
-                <div class="stat-card">
-                    <h3>High Vegetation</h3>
-                    <div class="stat-value">{format_number(aggregate.get('total_classification_high_vegetation', 0))}</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Building</h3>
-                    <div class="stat-value">{format_number(aggregate.get('total_classification_building', 0))}</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Water</h3>
-                    <div class="stat-value">{format_number(aggregate.get('total_classification_water', 0))}</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Noise</h3>
-                    <div class="stat-value">{format_number(aggregate.get('total_classification_noise', 0))}</div>
-                </div>
             </div>
             
             <h2 class="section-title">🗺️ Geographic Bounds (All Files)</h2>
@@ -677,7 +652,7 @@ class ReportGenerator:
                         <th>Filename</th>
                         <th>Point Count</th>
                         <th>Ground Points</th>
-                        <th>Vegetation Points</th>
+                        <th>Unclassified Points</th>
                         <th>Water Points</th>
                         <th>Density (pts/m²)</th>
                         <th>File Size (MB)</th>

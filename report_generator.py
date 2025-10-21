@@ -549,20 +549,24 @@ class ReportGenerator:
             
         import re
         
+        # Debug: Print the CRS info to see what we're working with
+        print(f"DEBUG: Full CRS info: {crs_info}")
+        
         # Look for EPSG codes in the CRS info
         # Pattern to match EPSG codes like "EPSG","6486"
         epsg_pattern = r'"EPSG","(\d+)"'
         matches = re.findall(epsg_pattern, crs_info)
         
         if matches:
-            # Return the first EPSG code found
+            print(f"DEBUG: Found EPSG pattern match: {matches[0]}")
             return matches[0]
         
-        # Also look for patterns like "value_offset 6486" in ProjectedCSTypeGeoKey
+        # Look for patterns like "value_offset 6486" in ProjectedCSTypeGeoKey
         projected_pattern = r'ProjectedCSTypeGeoKey.*?value_offset\s+(\d+)'
         projected_matches = re.findall(projected_pattern, crs_info)
         
         if projected_matches:
+            print(f"DEBUG: Found ProjectedCSTypeGeoKey match: {projected_matches[0]}")
             return projected_matches[0]
         
         # Look for EPSG codes in AUTHORITY entries
@@ -570,8 +574,23 @@ class ReportGenerator:
         authority_matches = re.findall(authority_pattern, crs_info)
         
         if authority_matches:
+            print(f"DEBUG: Found AUTHORITY match: {authority_matches[0]}")
             return authority_matches[0]
         
+        # Look for any 4-digit number that could be an EPSG code
+        # This is a fallback pattern
+        fallback_pattern = r'\b(\d{4,5})\b'
+        fallback_matches = re.findall(fallback_pattern, crs_info)
+        
+        if fallback_matches:
+            # Filter out common non-EPSG numbers
+            for match in fallback_matches:
+                code = int(match)
+                if 2000 <= code <= 99999:  # Reasonable EPSG code range
+                    print(f"DEBUG: Found fallback EPSG code: {match}")
+                    return match
+        
+        print("DEBUG: No EPSG code found")
         return None
     
     def _generate_details_html(self, results: List[LASFileInfo]) -> str:

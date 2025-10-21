@@ -540,7 +540,7 @@ class LASProcessor:
                     file_info.point_format = f"Format {parts[1].strip()}"
             
             # CRS/EPSG information - collect full context
-            if any(term in line for term in ['EPSG', 'NAD83', 'WGS', 'ProjLinearUnitsGeoKey', 'Linear_Foot', 'US survey foot']):
+            if any(term in line for term in ['EPSG', 'NAD83', 'WGS', 'ProjLinearUnitsGeoKey', 'ProjectedCSTypeGeoKey', 'Linear_Foot', 'US survey foot', 'GTCitationGeoKey']):
                 crs_lines.append(line_stripped)
             
             # Detect coordinate system units
@@ -554,7 +554,7 @@ class LASProcessor:
         
         # Combine CRS info
         if crs_lines:
-            file_info.crs_info = ' | '.join(crs_lines[:3])  # Keep first 3 relevant lines
+            file_info.crs_info = ' | '.join(crs_lines)  # Keep all relevant lines for better parsing
         
         # Calculate point density if we have bounds
         # Convert to square meters if needed

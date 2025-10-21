@@ -66,7 +66,7 @@ def test_python_processor():
     def progress_callback(message_type, filename, message):
         print(f"  {message}")
     
-    results = processor.process_files(las_files, progress_callback)
+    results, aggregate = processor.process_files(las_files, progress_callback)
     
     # Display results
     print(f"\nProcessing Results:")

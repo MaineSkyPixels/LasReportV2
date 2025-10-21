@@ -91,7 +91,7 @@ class PythonLASProcessor:
                    f"low_ram_mode={low_ram_mode}, "
                    f"max_workers={max_workers}")
     
-    def process_files(self, file_paths: List[Path], progress_callback: Optional[Callable] = None) -> List[LASFileInfo]:
+    def process_files(self, file_paths: List[Path], progress_callback: Optional[Callable] = None) -> tuple[List[LASFileInfo], Dict[str, any]]:
         """
         Process multiple LAS files in parallel using Python libraries only.
         
@@ -100,14 +100,16 @@ class PythonLASProcessor:
             progress_callback: Optional callback function for progress updates
             
         Returns:
-            List of LASFileInfo objects with processing results
+            Tuple of (list of LASFileInfo objects, aggregate statistics dict)
         """
         if not HAS_LASPY:
-            return [LASFileInfo(
+            error_results = [LASFileInfo(
                 filename=path.name,
                 filepath=path,
                 error="laspy library not available - cannot process LAS files"
             ) for path in file_paths]
+            aggregate = self._calculate_aggregates(error_results)
+            return error_results, aggregate
         
         results = []
         
@@ -137,7 +139,74 @@ class PythonLASProcessor:
                         error=f"Processing failed: {str(e)}"
                     ))
         
-        return results
+        # Sort results by filename
+        results.sort(key=lambda x: x.filename)
+        
+        # Calculate aggregate statistics
+        aggregate = self._calculate_aggregates(results)
+        
+        return results, aggregate
+    
+    def _calculate_aggregates(self, results: List[LASFileInfo]) -> Dict[str, any]:
+        """
+        Calculate aggregate statistics from all processed files.
+        
+        Args:
+            results: List of LASFileInfo objects
+            
+        Returns:
+            Dictionary with aggregate statistics
+        """
+        valid_results = [r for r in results if r.error is None]
+        
+        if not valid_results:
+            return {
+                'total_files': len(results),
+                'valid_files': 0,
+                'failed_files': len(results),
+                'total_points': 0,
+                'avg_point_density': 0.0,
+                'total_file_size_mb': 0.0,
+                'overall_min_x': 0.0,
+                'overall_max_x': 0.0,
+                'overall_min_y': 0.0,
+                'overall_max_y': 0.0,
+                'overall_min_z': 0.0,
+                'overall_max_z': 0.0,
+            }
+        
+        total_points = sum(r.point_count for r in valid_results)
+        avg_density = (sum(r.point_density for r in valid_results) / len(valid_results)
+                      if valid_results else 0.0)
+        total_size = sum(r.file_size_mb for r in results)
+        
+        try:
+            overall_min_x = min(r.min_x for r in valid_results)
+            overall_max_x = max(r.max_x for r in valid_results)
+            overall_min_y = min(r.min_y for r in valid_results)
+            overall_max_y = max(r.max_y for r in valid_results)
+            overall_min_z = min(r.min_z for r in valid_results)
+            overall_max_z = max(r.max_z for r in valid_results)
+        except (ValueError, TypeError) as e:
+            # Handle case where valid_results is empty or contains invalid data
+            overall_min_x = overall_max_x = 0.0
+            overall_min_y = overall_max_y = 0.0
+            overall_min_z = overall_max_z = 0.0
+        
+        return {
+            'total_files': len(results),
+            'valid_files': len(valid_results),
+            'failed_files': len(results) - len(valid_results),
+            'total_points': total_points,
+            'avg_point_density': avg_density,
+            'total_file_size_mb': total_size,
+            'overall_min_x': overall_min_x,
+            'overall_max_x': overall_max_x,
+            'overall_min_y': overall_min_y,
+            'overall_max_y': overall_max_y,
+            'overall_min_z': overall_min_z,
+            'overall_max_z': overall_max_z,
+        }
     
     def _process_single_file(self, filepath: Path, progress_callback: Optional[Callable] = None) -> LASFileInfo:
         """

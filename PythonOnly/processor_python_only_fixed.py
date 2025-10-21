@@ -184,7 +184,7 @@ class PythonLASProcessor:
                 file_info.max_z = header.max[2]
                 
                 # Extract CRS information from Variable Length Records (VLRs)
-                file_info.crs_info, file_info.crs_units = self._extract_crs_info(header.vlrs, header)
+                file_info.crs_info, file_info.crs_units = self._extract_crs_info(header.vlrs)
                 
                 # Calculate point density
                 if file_info.min_x != file_info.max_x and file_info.min_y != file_info.max_y and file_info.point_count > 0:
@@ -205,13 +205,12 @@ class PythonLASProcessor:
         
         return file_info
     
-    def _extract_crs_info(self, vlrs, header) -> tuple[str, str]:
+    def _extract_crs_info(self, vlrs) -> tuple[str, str]:
         """
-        Extract coordinate reference system information from VLRs and header.
+        Extract coordinate reference system information from VLRs.
         
         Args:
             vlrs: Variable Length Records from LAS header
-            header: LAS file header object
             
         Returns:
             Tuple of (crs_info, crs_units)
@@ -223,74 +222,27 @@ class PythonLASProcessor:
             for vlr in vlrs:
                 # Look for GeoTIFF VLRs that contain CRS information
                 if hasattr(vlr, 'string') and vlr.string:
-                    try:
-                        # Handle different string formats
-                        if isinstance(vlr.string, bytes):
-                            vlr_string = vlr.string.decode('utf-8', errors='ignore')
-                        else:
-                            vlr_string = str(vlr.string)
-                        
-                        # Extract coordinate system name
-                        if 'GTCitationGeoKey' in vlr_string:
-                            match = re.search(r'GTCitationGeoKey:\s*([^|]+)', vlr_string)
-                            if match:
-                                crs_info = match.group(1).strip()
-                        
-                        # Detect units
-                        if 'US survey foot' in vlr_string or 'Linear_Foot_US_Survey' in vlr_string:
-                            crs_units = "us_survey_feet"
-                        elif 'linear_foot' in vlr_string.lower() or 'ftus' in vlr_string.lower():
-                            crs_units = "feet"
-                        elif 'meter' in vlr_string.lower() and ('linear_meter' in vlr_string.lower() or 'unit[' in vlr_string.lower()):
-                            crs_units = "meters"
-                    except Exception:
-                        # Skip this VLR if there's an error
-                        continue
+                    vlr_string = vlr.string.decode('utf-8', errors='ignore')
+                    
+                    # Extract coordinate system name
+                    if 'GTCitationGeoKey' in vlr_string:
+                        match = re.search(r'GTCitationGeoKey:\s*([^|]+)', vlr_string)
+                        if match:
+                            crs_info = match.group(1).strip()
+                    
+                    # Detect units
+                    if 'US survey foot' in vlr_string or 'Linear_Foot_US_Survey' in vlr_string:
+                        crs_units = "us_survey_feet"
+                    elif 'linear_foot' in vlr_string.lower() or 'ftus' in vlr_string.lower():
+                        crs_units = "feet"
+                    elif 'meter' in vlr_string.lower() and ('linear_meter' in vlr_string.lower() or 'unit[' in vlr_string.lower()):
+                        crs_units = "meters"
                         
         except Exception as e:
             # If CRS extraction fails, continue with defaults
             pass
         
-        # Fallback: Detect units based on coordinate values
-        if crs_units == "unknown":
-            crs_units = self._detect_units_from_coordinates(header)
-        
         return crs_info, crs_units
-    
-    def _detect_units_from_coordinates(self, header) -> str:
-        """
-        Detect coordinate units based on coordinate values.
-        
-        Args:
-            header: LAS file header object
-            
-        Returns:
-            Detected unit type
-        """
-        # Get coordinate bounds
-        min_x, min_y = header.min[0], header.min[1]
-        max_x, max_y = header.max[0], header.max[1]
-        
-        # Calculate coordinate ranges
-        x_range = abs(max_x - min_x)
-        y_range = abs(max_y - min_y)
-        
-        # US State Plane coordinates in feet typically have values in the millions
-        # (e.g., 2,000,000 to 3,000,000 feet)
-        if (min_x > 1000000 and max_x > 1000000 and 
-            min_y > 100000 and max_y > 100000 and
-            x_range > 1000 and y_range > 1000):
-            return "us_survey_feet"
-        
-        # UTM coordinates in meters typically have values in the hundreds of thousands
-        # (e.g., 200,000 to 800,000 meters)
-        elif (min_x > 100000 and max_x > 100000 and 
-              min_y > 100000 and max_y > 100000 and
-              x_range > 1000 and y_range > 1000):
-            return "meters"
-        
-        # Default to meters if we can't determine
-        return "meters"
     
     def _calculate_point_density(self, file_info: LASFileInfo) -> float:
         """

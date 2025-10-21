@@ -113,6 +113,7 @@ class ReportGenerator:
         
         # Create file rows
         file_rows = []
+        return_rows = []
         for result in results:
             logger.debug(f"\nProcessing result for: {result.filename}")
             logger.debug(f"  acreage_detailed: {result.acreage_detailed:.4f}")
@@ -121,12 +122,16 @@ class ReportGenerator:
                 file_rows.append(f"""
                 <tr class="error-row">
                     <td>{result.filename}</td>
-                    <td colspan="9" class="error-msg">Error: {result.error}</td>
+                    <td colspan="8" class="error-msg">Error: {result.error}</td>
+                </tr>
+                """)
+                return_rows.append(f"""
+                <tr class="error-row">
+                    <td>{result.filename}</td>
+                    <td colspan="7" class="error-msg">Error: {result.error}</td>
                 </tr>
                 """)
             else:
-                crs_display = result.crs_units if result.crs_units else "unknown"
-                
                 # Determine acreage display - only show if convex hull acreage available
                 if result.acreage_detailed > 0:
                     acreage_display = f"{result.acreage_detailed:.2f}"
@@ -137,21 +142,36 @@ class ReportGenerator:
                     acreage_method_label = "Not Calculated"
                     logger.debug(f"  ⚠ No convex hull acreage available")
                 
+                # First table: Basic file information with acreage
                 file_rows.append(f"""
                 <tr>
                     <td>{result.filename}</td>
                     <td>{format_number(result.point_count)}</td>
-                    <td>{format_number(result.returns_1)}/{format_number(result.returns_2)}/{format_number(result.returns_3)}</td>
                     <td>{format_number(result.classification_ground)}</td>
                     <td>{format_number(result.classification_low_vegetation + result.classification_medium_vegetation + result.classification_high_vegetation)}</td>
                     <td>{format_number(result.classification_water)}</td>
-                    <td>{result.scan_angle_min:.1f}° to {result.scan_angle_max:.1f}°</td>
                     <td>{format_number(result.point_density) if result.point_density > 0 else '-'}</td>
                     <td>{result.file_size_mb:.2f}</td>
+                    <td title="{acreage_method_label}">{acreage_display}</td>
+                </tr>
+                """)
+                
+                # Second table: Return counts and scan angles
+                return_rows.append(f"""
+                <tr>
+                    <td>{result.filename}</td>
+                    <td>{format_number(result.returns_1)}</td>
+                    <td>{format_number(result.returns_2)}</td>
+                    <td>{format_number(result.returns_3)}</td>
+                    <td>{format_number(result.returns_4)}</td>
+                    <td>{format_number(result.returns_5)}</td>
+                    <td>{result.scan_angle_min:.1f}°</td>
+                    <td>{result.scan_angle_max:.1f}°</td>
                 </tr>
                 """)
         
         file_rows_html = '\n'.join(file_rows)
+        return_rows_html = '\n'.join(return_rows)
         
         # Calculate scan time
         scan_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -669,17 +689,35 @@ class ReportGenerator:
                     <tr>
                         <th>Filename</th>
                         <th>Point Count</th>
-                        <th>Returns<br/>(1st/2nd/3rd)</th>
-                        <th>Ground<br/>Points</th>
-                        <th>Vegetation<br/>Points</th>
-                        <th>Water<br/>Points</th>
-                        <th>Scan Angle<br/>Range</th>
+                        <th>Ground Points</th>
+                        <th>Vegetation Points</th>
+                        <th>Water Points</th>
                         <th>Density (pts/m²)</th>
                         <th>File Size (MB)</th>
+                        <th>Acreage (Convex Hull)</th>
                     </tr>
                 </thead>
                 <tbody>
                     {file_rows_html}
+                </tbody>
+            </table>
+            
+            <h2 class="section-title">📊 Return Counts & Scan Angles (by File)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Filename</th>
+                        <th>Return 1st</th>
+                        <th>Return 2nd</th>
+                        <th>Return 3rd</th>
+                        <th>Return 4th</th>
+                        <th>Return 5th</th>
+                        <th>Scan Angle Min</th>
+                        <th>Scan Angle Max</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {return_rows_html}
                 </tbody>
             </table>
             

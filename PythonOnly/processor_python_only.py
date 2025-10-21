@@ -331,7 +331,9 @@ class PythonLASProcessor:
                         # Extract return counts using numpy bincount (much faster than loops)
                         if hasattr(las_data, 'return_num'):
                             try:
-                                return_counts = numpy.bincount(las_data.return_num.astype(numpy.int32))
+                                # Convert SubFieldView to numpy array
+                                return_num_array = numpy.asarray(las_data.return_num, dtype=numpy.int32)
+                                return_counts = numpy.bincount(return_num_array)
                                 file_info.returns_1 = int(return_counts[1]) if len(return_counts) > 1 else 0
                                 file_info.returns_2 = int(return_counts[2]) if len(return_counts) > 2 else 0
                                 file_info.returns_3 = int(return_counts[3]) if len(return_counts) > 3 else 0
@@ -344,7 +346,9 @@ class PythonLASProcessor:
                         # Extract classification counts using numpy bincount (much faster than loops)
                         if hasattr(las_data, 'classification'):
                             try:
-                                classification_counts = numpy.bincount(las_data.classification.astype(numpy.int32))
+                                # Convert SubFieldView to numpy array
+                                classification_array = numpy.asarray(las_data.classification, dtype=numpy.int32)
+                                classification_counts = numpy.bincount(classification_array)
                                 # LAS classification codes
                                 file_info.classification_unclassified = int(classification_counts[0]) if len(classification_counts) > 0 else 0
                                 file_info.classification_reserved = int(classification_counts[1]) if len(classification_counts) > 1 else 0

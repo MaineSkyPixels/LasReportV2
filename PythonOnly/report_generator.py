@@ -74,6 +74,8 @@ class ReportGenerator:
         # Collect coordinate system information
         crs_systems = set()
         crs_units = set()
+        crs_epsg_codes = set()
+        crs_vertical_datums = set()
         
         for result in results:
             if not result.error and result.acreage_detailed > 0:
@@ -90,6 +92,16 @@ class ReportGenerator:
                     if crs_name:
                         logger.debug(f"Parsed CRS name: {crs_name}")
                         crs_systems.add(crs_name)
+                        
+                        # Extract EPSG code from CRS name if present
+                        epsg_match = self._extract_epsg_from_crs_name(crs_name)
+                        if epsg_match:
+                            crs_epsg_codes.add(epsg_match)
+                        
+                        # Extract vertical datum from CRS name if present
+                        vertical_datum = self._extract_vertical_datum_from_crs_name(crs_name)
+                        if vertical_datum:
+                            crs_vertical_datums.add(vertical_datum)
                 
                 if result.crs_units and result.crs_units != "unknown":
                     crs_units.add(result.crs_units)
@@ -315,6 +327,13 @@ class ReportGenerator:
             padding: 2px 6px;
             border-radius: 3px;
             font-family: 'Courier New', monospace;
+        }}
+        
+        .unit-label {{
+            color: #666;
+            font-size: 0.9em;
+            font-style: italic;
+            margin-left: 5px;
         }}
         
         .bounds-container {{
@@ -559,14 +578,16 @@ class ReportGenerator:
             <div class="bounds-container">
                 <div class="bounds-section">
                     <h4>🗺️ Geographic Bounds (All Files)</h4>
-                    <p>X: <span class="bounds-highlight">{format_number(aggregate['overall_min_x'])}</span> to <span class="bounds-highlight">{format_number(aggregate['overall_max_x'])}</span></p>
-                    <p>Y: <span class="bounds-highlight">{format_number(aggregate['overall_min_y'])}</span> to <span class="bounds-highlight">{format_number(aggregate['overall_max_y'])}</span></p>
-                    <p>Z: <span class="bounds-highlight">{format_number(aggregate['overall_min_z'])}</span> to <span class="bounds-highlight">{format_number(aggregate['overall_max_z'])}</span></p>
+                    <p>X: <span class="bounds-highlight">{format_number(aggregate['overall_min_x'])}</span> to <span class="bounds-highlight">{format_number(aggregate['overall_max_x'])}</span> <span class="unit-label">({", ".join(sorted(crs_units)) if crs_units else "Unknown units"})</span></p>
+                    <p>Y: <span class="bounds-highlight">{format_number(aggregate['overall_min_y'])}</span> to <span class="bounds-highlight">{format_number(aggregate['overall_max_y'])}</span> <span class="unit-label">({", ".join(sorted(crs_units)) if crs_units else "Unknown units"})</span></p>
+                    <p>Z: <span class="bounds-highlight">{format_number(aggregate['overall_min_z'])}</span> to <span class="bounds-highlight">{format_number(aggregate['overall_max_z'])}</span> <span class="unit-label">({", ".join(sorted(crs_units)) if crs_units else "Unknown units"})</span></p>
                 </div>
                 <div class="bounds-section">
                     <h4>🌐 Coordinate Reference System</h4>
                     {f'<div class="crs-info"><strong>Units:</strong> {", ".join(sorted(crs_units)) if crs_units else "Unknown"}</div>' if crs_units else '<p style="color: #666; font-style: italic;">No coordinate system information available</p>'}
                     {f'<div class="crs-info" style="margin-top: 10px;"><strong>System:</strong><br>{list(crs_systems)[0] if len(crs_systems) == 1 else "Multiple systems detected"}</div>' if crs_systems else ""}
+                    {f'<div class="crs-info" style="margin-top: 10px;"><strong>EPSG Code:</strong> {", ".join(sorted(crs_epsg_codes)) if crs_epsg_codes else "Not available"}</div>' if crs_epsg_codes else ""}
+                    {f'<div class="crs-info" style="margin-top: 10px;"><strong>Vertical Datum:</strong> {", ".join(sorted(crs_vertical_datums)) if crs_vertical_datums else "Not available"}</div>' if crs_vertical_datums else ""}
                 </div>
             </div>
             
@@ -646,6 +667,64 @@ class ReportGenerator:
         # If no GTCitationGeoKey pattern found, return the CRS info as-is
         # (this handles coordinate-based detection results)
         return crs_info.strip()
+    
+    def _extract_epsg_from_crs_name(self, crs_name: str) -> str:
+        """
+        Extract EPSG code from CRS name.
+        
+        Args:
+            crs_name: CRS name string
+            
+        Returns:
+            EPSG code if found, empty string otherwise
+        """
+        if not crs_name:
+            return ""
+        
+        import re
+        
+        # Look for EPSG code in the CRS name
+        epsg_match = re.search(r'EPSG["\s]*["\s]*(\d+)', crs_name)
+        if epsg_match:
+            return epsg_match.group(1)
+        
+        # For Maine West (ftUS), we know the EPSG code is 6486
+        if 'Maine West (ftUS)' in crs_name:
+            return "6486"
+        
+        return ""
+    
+    def _extract_vertical_datum_from_crs_name(self, crs_name: str) -> str:
+        """
+        Extract vertical datum from CRS name.
+        
+        Args:
+            crs_name: CRS name string
+            
+        Returns:
+            Vertical datum if found, empty string otherwise
+        """
+        if not crs_name:
+            return ""
+        
+        import re
+        
+        # Look for vertical datum patterns
+        vertical_patterns = [
+            r'NAVD88[^"]*',
+            r'NGVD29[^"]*',
+            r'EGM96[^"]*',
+            r'EGM2008[^"]*',
+            r'MSL[^"]*',
+            r'height[^"]*'
+        ]
+        
+        for pattern in vertical_patterns:
+            match = re.search(pattern, crs_name, re.IGNORECASE)
+            if match:
+                return match.group(0).strip()
+        
+        return ""
     
     def _generate_details_content(self, results: List[LASFileInfo]) -> str:
         """Generate the detailed file information content."""

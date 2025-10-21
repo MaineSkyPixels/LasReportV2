@@ -1,0 +1,15 @@
+LAS File Header Information Dump
+Generated: 2025-10-21 02:36:29
+Source File: cloud5.las
+================================================================================
+
+BASIC FILE INFORMATION
+----------------------------------------
+File Signature: Not available
+Version: N/A.N/A
+System Identifier: REpJLUwxLU5ZWC4=
+Generating Software: LASzip DLL 3.4 r3 (191111)
+File Creation Day: Not available
+File Creation Year: Not available
+Header Size: Not available
+Point Data Format: 3

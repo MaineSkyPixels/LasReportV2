@@ -341,13 +341,19 @@ Documentation files:
 - `ACREAGE_CALCULATION_ISSUE.md` - Issue tracking
 - And others...
 
-### testcode/ Folder
+### TestCodeData/ Folder
 
-Testing and utility scripts:
-- `test_parser.py` - Parser verification
-- `test_full_processing.py` - End-to-end tests
-- `generate_reports_direct.py` - Direct report utility
-- `verify_acreage.py` - Acreage calculation verification
+Testing, debugging, and utility scripts:
+- `test_python_processor.py` - Python processor testing and validation
+- `test_report_generation.py` - Report generation testing
+- `debug_crs_extraction.py` - CRS extraction debugging utility
+- `dump_las_header_simple.py` - LAS header information dumping utility
+- `processor_python_only_broken.py` - Backup processor versions
+- `processor_python_only_fixed.py` - Fixed processor versions
+- `test_crs_collection.py` - CRS information collection testing
+- `debug_crs.py` - CRS debugging utilities
+- `dump_las_header.py` - Alternative LAS header dumping utility
+- `cloud5_las_header_dump_*.txt` - Generated header dump files
 
 ### Generated During Execution
 

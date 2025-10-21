@@ -1,0 +1,8 @@
+LAS File Header Information Dump
+Generated: 2025-10-21 02:35:48
+Source File: cloud5.las
+================================================================================
+
+BASIC FILE INFORMATION
+----------------------------------------
+File Signature: Not available

@@ -153,7 +153,7 @@ LasReport/
 │   ├── SESSION_SUMMARY_OCTOBER_21.md
 │   └── ... (other doc files)
 │
-├── testcode/            # Test and debug scripts
+├── TestCodeData/        # Test and debug scripts
 │   ├── test_ram_system.py
 │   ├── fix_multiplier.py
 │   ├── fix_thread_calc.py

@@ -233,7 +233,7 @@ else:
 
 | File | Purpose |
 |------|---------|
-| testcode/test_convex_hull.py | New test script |
+| TestCodeData/test_convex_hull.py | New test script |
 
 ---
 

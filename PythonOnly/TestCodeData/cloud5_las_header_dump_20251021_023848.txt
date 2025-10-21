@@ -1,0 +1,88 @@
+LAS File Header Information Dump
+Generated: 2025-10-21 02:38:48
+Source File: cloud5.las
+================================================================================
+
+ALL AVAILABLE HEADER ATTRIBUTES
+----------------------------------------
+DEFAULT_POINT_FORMAT: <PointFormat(3, 0 bytes of extra dims)>
+DEFAULT_VERSION: 1.2
+are_points_compressed: False
+creation_date: 2025-09-14
+evlrs: None
+extra_header_bytes: b''
+extra_vlr_bytes: b''
+file_source_id: 0
+generating_software: LASzip DLL 3.4 r3 (191111)
+global_encoding: <laspy.header.GlobalEncoding object at 0x0000023D670EF890>
+major_version: 1
+maxs: [2.96298935e+06 3.41131131e+05 5.46260907e+01]
+minor_version: 2
+mins: [ 2.96230043e+06  3.39956910e+05 -6.97345317e+00]
+number_of_evlrs: 0
+number_of_points_by_return: [18711585      775        0        0        0        0        0        0
+        0        0        0        0        0        0        0]
+offset_to_point_data: 1634
+offsets: [2962000.  340000.       0.]
+point_count: 18712360
+point_format: <PointFormat(3, 0 bytes of extra dims)>
+scales: [0.0001 0.0001 0.0001]
+start_of_first_evlr: 0
+start_of_waveform_data_packet_record: 0
+system_identifier: REpJLUwxLU5ZWC4=
+uuid: 00000000-0000-0000-0000-000000000000
+version: 1.2
+vlrs: [<GeoKeyDirectoryVlr(11 geo_keys)>, <GeoAsciiParamsVlr(['NAD83(2011) / Maine West (ftUS) + NAVD88 height (ftUS)|NAD83(2011)|NAVD88 height (ftUS)|', ''])>, <laspy.vlrs.known.WktCoordinateSystemVlr object at 0x0000023D17482480>]
+x_max: 2962989.3503428996
+x_min: 2962300.434763616
+x_offset: 2962000.0
+x_scale: 0.0001
+y_max: 341131.1307751331
+y_min: 339956.9102884236
+y_offset: 340000.0
+y_scale: 0.0001
+z_max: 54.626090718486545
+z_min: -6.973453166780224
+z_offset: 0.0
+z_scale: 0.0001
+
+COMMON LAS HEADER FIELDS
+----------------------------------------
+point_count: 18712360
+scale: [0.0001 0.0001 0.0001]
+offset: [2962000.  340000.       0.]
+min: [ 2.96230043e+06  3.39956910e+05 -6.97345317e+00]
+max: [2.96298935e+06 3.41131131e+05 5.46260907e+01]
+point_format: <PointFormat(3, 0 bytes of extra dims)>
+vlrs: [<GeoKeyDirectoryVlr(11 geo_keys)>, <GeoAsciiParamsVlr(['NAD83(2011) / Maine West (ftUS) + NAVD88 height (ftUS)|NAD83(2011)|NAVD88 height (ftUS)|', ''])>, <laspy.vlrs.known.WktCoordinateSystemVlr object at 0x0000023D17482480>]
+evlrs: None
+
+VARIABLE LENGTH RECORDS (VLRs)
+----------------------------------------
+Number of VLRs: 3
+
+VLR 1:
+  Record ID: 34735
+  User ID: LASF_Projection
+  Description: GeoTIFF GeoKeyDirectoryTag
+  String Content: None
+
+VLR 2:
+  Record ID: 34737
+  User ID: LASF_Projection
+  Description: GeoTIFF GeoAsciiParamsTag
+  String Content: None
+
+VLR 3:
+  Record ID: 2112
+  User ID: LASF_Projection
+  Description: OGR variant of OpenGIS WKT SRS
+  String Content:
+    COMPD_CS["NAD83(2011) / Maine West (ftUS) + NAVD88 height (ftUS)",PROJCS["NAD83(2011) / Maine West (ftUS)",GEOGCS["NAD83(2011)",DATUM["NAD83_National_Spatial_Reference_System_2011",SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],AUTHORITY["EPSG","1116"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","6318"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",42.8333333333333],PARAMETER["central_meridian",-70.1666666666667],PARAMETER["scale_factor",0.999966667],PARAMETER["false_easting",2952750],PARAMETER["false_northing",0],UNIT["US survey foot",0.304800609601219,AUTHORITY["EPSG","9003"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","6486"]],VERT_CS["NAVD88 height (ftUS)",VERT_DATUM["North American Vertical Datum 1988",2005,EXTENSION["PROJ4_GRIDS","us_noaa_g2018u0.tif"],AUTHORITY["EPSG","5103"]],UNIT["US survey foot",0.304800609601219,AUTHORITY["EPSG","9003"]],AXIS["Gravity-related height",UP],AUTHORITY["EPSG","6360"]]]
+
+EXTENDED VARIABLE LENGTH RECORDS (EVLRs)
+----------------------------------------
+Number of EVLRs: None
+
+================================================================================
+End of LAS Header Information Dump

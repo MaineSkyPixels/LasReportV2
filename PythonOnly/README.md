@@ -122,10 +122,12 @@ Reports are generated in the same directory as the scanned LAS files:
 ```
 LasReport/
 ├── main.py                  - Application entry point and orchestration
-├── gui.py                   - Tkinter GUI implementation
+├── gui.py                   - CustomTkinter GUI implementation
 ├── scanner.py               - LAS file discovery
 ├── processor_python_only.py - Python-based LAS file processing
+├── processor.py             - Legacy lasinfo-based processor
 ├── report_generator.py      - HTML report generation
+├── system_utils.py          - System utilities and monitoring
 ├── requirements.txt         - Python dependencies (laspy, scipy, numpy, etc.)
 ├── run.bat                  - Windows convenience launcher
 ├── README.md               - This file
@@ -140,11 +142,14 @@ LasReport/
 │   ├── ACREAGE_KEYERROR_FIX.md - KeyError resolution
 │   ├── SESSION_COMPLETION_SUMMARY.md - Session report
 │   └── ... (other documentation)
-└── testcode/               - Testing and utility scripts
-    ├── test_parser.py
-    ├── test_full_processing.py
-    ├── generate_reports_direct.py
-    └── verify_acreage.py
+└── TestCodeData/           - Testing, debugging, and utility scripts
+    ├── test_python_processor.py - Python processor testing
+    ├── test_report_generation.py - Report generation testing
+    ├── debug_crs_extraction.py - CRS extraction debugging
+    ├── dump_las_header_simple.py - LAS header dumping utility
+    ├── processor_python_only_broken.py - Backup processor versions
+    ├── processor_python_only_fixed.py
+    └── ... (other test/debug files)
 ```
 
 ## Documentation

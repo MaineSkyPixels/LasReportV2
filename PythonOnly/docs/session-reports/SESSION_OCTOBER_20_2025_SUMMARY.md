@@ -102,7 +102,7 @@ This session achieved complete implementation of advanced acreage calculation wi
 **Files Modified**:
 - processor.py (laspy API fix + logging)
 - requirements.txt (version correction)
-- testcode/test_convex_hull.py (new test script)
+- TestCodeData/test_convex_hull.py (new test script)
 
 **Documentation**: Created `docs/CONVEX_HULL_DIAGNOSTIC_FIX.md` (300+ lines)
 

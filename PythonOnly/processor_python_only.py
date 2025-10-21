@@ -332,6 +332,18 @@ class PythonLASProcessor:
                             match = re.search(r'GTCitationGeoKey:\s*([^|]+)', vlr_string)
                             if match:
                                 crs_info = match.group(1).strip()
+                        # Check for WKT VLR which contains the full CRS name
+                        elif 'COMPD_CS' in vlr_string and 'NAD83' in vlr_string:
+                            # Extract the full CRS name from WKT VLR
+                            match = re.search(r'COMPD_CS\["([^"]*NAD83[^"]*)"', vlr_string)
+                            if match:
+                                crs_info = match.group(1).strip()
+                        # Also check for GeoAsciiParamsVlr which contains the full CRS name
+                        elif 'NAD83' in vlr_string and 'Maine' in vlr_string:
+                            # Extract the full CRS name from GeoAsciiParamsVlr
+                            match = re.search(r"'([^']*NAD83[^']*Maine[^']*)'", vlr_string)
+                            if match:
+                                crs_info = match.group(1).strip()
                         
                         # Detect units
                         if 'US survey foot' in vlr_string or 'Linear_Foot_US_Survey' in vlr_string:

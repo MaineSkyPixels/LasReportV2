@@ -643,7 +643,9 @@ class ReportGenerator:
             crs_name = crs_name.rstrip('|').strip()
             return crs_name
         
-        return None
+        # If no GTCitationGeoKey pattern found, return the CRS info as-is
+        # (this handles coordinate-based detection results)
+        return crs_info.strip()
     
     def _generate_details_content(self, results: List[LASFileInfo]) -> str:
         """Generate the detailed file information content."""
@@ -708,7 +710,7 @@ class ReportGenerator:
                             Z: {result.min_z:.2f} to {result.max_z:.2f}
                         </div>
                         <div class="raw-output-container" style="display: none;">
-                            <strong>Complete lasinfo Output:</strong>
+                            <strong>Complete Python Analysis Output:</strong>
                             <pre class="raw-output">{raw_output_escaped}</pre>
                         </div>
                     </div>

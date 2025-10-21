@@ -320,9 +320,13 @@ class PythonLASProcessor:
             # If CRS extraction fails, continue with defaults
             pass
         
-        # Fallback: Detect units based on coordinate values
+        # Fallback: Detect units and coordinate system based on coordinate values
         if crs_units == "unknown":
             crs_units = self._detect_units_from_coordinates(header)
+        
+        # If we still don't have CRS info, try to determine it from coordinates
+        if not crs_info:
+            crs_info = self._detect_crs_from_coordinates(header)
         
         return crs_info, crs_units
     
@@ -360,6 +364,44 @@ class PythonLASProcessor:
         
         # Default to meters if we can't determine
         return "meters"
+    
+    def _detect_crs_from_coordinates(self, header) -> str:
+        """
+        Detect coordinate reference system based on coordinate values.
+        
+        Args:
+            header: LAS file header object
+            
+        Returns:
+            Detected CRS name or empty string
+        """
+        # Get coordinate bounds
+        min_x, min_y = header.min[0], header.min[1]
+        max_x, max_y = header.max[0], header.max[1]
+        
+        # US State Plane coordinates in feet typically have values in the millions
+        # (e.g., 2,000,000 to 3,000,000 feet)
+        if (min_x > 1000000 and max_x > 1000000 and 
+            min_y > 100000 and max_y > 100000):
+            
+            # Try to determine which state plane zone based on coordinate ranges
+            # This is a simplified approach - in practice, you'd need more sophisticated logic
+            
+            # Maine State Plane coordinates (example)
+            if (min_x > 2900000 and max_x < 3000000 and 
+                min_y > 300000 and max_y < 400000):
+                return "NAD83(2011) / Maine West (ftUS)"
+            
+            # Generic US State Plane
+            return "NAD83 / US State Plane (ftUS)"
+        
+        # UTM coordinates in meters typically have values in the hundreds of thousands
+        elif (min_x > 100000 and max_x > 100000 and 
+              min_y > 100000 and max_y > 100000):
+            return "WGS84 / UTM Zone (m)"
+        
+        # Default
+        return ""
     
     def _calculate_point_density(self, file_info: LASFileInfo) -> float:
         """

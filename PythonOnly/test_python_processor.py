@@ -17,23 +17,23 @@ def test_python_processor():
     # Check if we have the required libraries
     try:
         import laspy
-        print("✅ laspy available")
+        print("[OK] laspy available")
     except ImportError:
-        print("❌ laspy not available - install with: pip install laspy")
+        print("[ERROR] laspy not available - install with: pip install laspy")
         return False
     
     try:
         import scipy
-        print("✅ scipy available")
+        print("[OK] scipy available")
     except ImportError:
-        print("❌ scipy not available - install with: pip install scipy")
+        print("[ERROR] scipy not available - install with: pip install scipy")
         return False
     
     try:
         import numpy
-        print("✅ numpy available")
+        print("[OK] numpy available")
     except ImportError:
-        print("❌ numpy not available - install with: pip install numpy")
+        print("[ERROR] numpy not available - install with: pip install numpy")
         return False
     
     # Initialize processor
@@ -52,7 +52,7 @@ def test_python_processor():
     las_files = list(Path(".").glob("*.las"))
     
     if not las_files:
-        print("\n❌ No LAS files found in current directory")
+        print("\n[ERROR] No LAS files found in current directory")
         print("   Place some .las files in the current directory to test")
         return False
     
@@ -87,11 +87,11 @@ def test_python_processor():
         if result.acreage_detailed > 0:
             print(f"  Convex Hull Acreage: {result.acreage_detailed:.2f} acres")
         if result.error:
-            print(f"  ❌ Error: {result.error}")
+            print(f"  [ERROR] Error: {result.error}")
         else:
-            print(f"  ✅ Success")
+            print(f"  [OK] Success")
     
-    print(f"\n✅ Test completed successfully!")
+    print(f"\n[OK] Test completed successfully!")
     return True
 
 if __name__ == "__main__":

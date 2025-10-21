@@ -12,7 +12,7 @@ import threading
 
 from gui import LASReportGUI
 from scanner import find_las_files
-from processor import LASProcessor
+from processor_python_only import PythonLASProcessor
 from report_generator import ReportGenerator
 from system_utils import (check_minimum_ram, format_ram_size, 
                          estimate_total_ram_needed, calculate_optimal_threads,
@@ -241,7 +241,7 @@ class LASAnalyzerApp:
             # Use fewer threads to avoid memory contention
             max_workers = self.preflight_optimal_threads
             
-            processor = LASProcessor(
+            processor = PythonLASProcessor(
                 max_workers=max_workers, 
                 use_detailed_acreage=use_detailed_acreage, 
                 low_ram_mode=low_ram_mode
@@ -354,7 +354,7 @@ class LASAnalyzerApp:
                     self.logger.info(f"  Bounds Z: {result.min_z:.2f} to {result.max_z:.2f}")
                     
                     if result.raw_output:
-                        self.logger.debug(f"  Raw lasinfo output:\n{result.raw_output}")
+                        self.logger.debug(f"  Raw Python analysis output:\n{result.raw_output}")
             
             self.logger.info("\n" + "=" * 80)
             self.logger.info("Analysis completed successfully!")
@@ -364,7 +364,7 @@ class LASAnalyzerApp:
             self.gui.log_status("\n⏹ Scan cancelled by user")
             self.logger.info("Scan cancelled by user")
         except FileNotFoundError as e:
-            error_msg = f"lasinfo command not found. Make sure it's installed and in PATH.\n{str(e)}"
+            error_msg = f"Python LAS processing error. Check that laspy, scipy, and numpy are installed.\n{str(e)}"
             self.gui.show_error(error_msg)
             if self.logger:
                 self.logger.error(error_msg)

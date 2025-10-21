@@ -329,7 +329,7 @@ class PythonLASProcessor:
             f"  Point density: {file_info.point_density:.2f} pts/m²",
             f"  File size: {file_info.file_size_mb:.2f} MB",
             f"  Processing time: {file_info.processing_time:.2f} sec",
-        ])
+        ]
         
         if file_info.crs_info:
             summary_lines.extend([

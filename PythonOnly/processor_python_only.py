@@ -89,7 +89,7 @@ class PythonLASProcessor:
     """Handles LAS file processing using only Python libraries (laspy, scipy, numpy)."""
     
     def __init__(self, max_workers: int = 4, use_detailed_acreage: bool = False, 
-                 low_ram_mode: bool = False):
+                 low_ram_mode: bool = False, extract_classifications: bool = True):
         """
         Initialize the processor.
         
@@ -97,10 +97,12 @@ class PythonLASProcessor:
             max_workers: Maximum number of parallel threads for file processing
             use_detailed_acreage: If True, calculate convex hull acreage (RAM intensive)
             low_ram_mode: If True, force maximum decimation for all files
+            extract_classifications: If True, extract return/classification/scan angle data (adds ~10-15% time)
         """
         self.max_workers = max_workers
         self.use_detailed_acreage = use_detailed_acreage and HAS_LASPY and HAS_SCIPY
         self.low_ram_mode = low_ram_mode
+        self.extract_classifications = extract_classifications
         self.cancel_event = threading.Event()  # For cancelling ongoing processing
         
         # Debug logging
@@ -323,48 +325,60 @@ class PythonLASProcessor:
                 
                 # Read point data to extract classifications and returns
                 try:
-                    las_data = las_file.read()
-                    
-                    # Extract return counts
-                    if hasattr(las_data, 'return_num'):
-                        return_counts = {}
-                        for return_num in las_data.return_num:
-                            return_counts[return_num] = return_counts.get(return_num, 0) + 1
+                    if self.extract_classifications:
+                        las_data = las_file.read()
                         
-                        file_info.returns_1 = return_counts.get(1, 0)
-                        file_info.returns_2 = return_counts.get(2, 0)
-                        file_info.returns_3 = return_counts.get(3, 0)
-                        file_info.returns_4 = return_counts.get(4, 0)
-                        file_info.returns_5 = return_counts.get(5, 0)
-                        logger.debug(f"Return counts: R1={file_info.returns_1}, R2={file_info.returns_2}, R3={file_info.returns_3}, R4={file_info.returns_4}, R5={file_info.returns_5}")
-                    
-                    # Extract classification counts
-                    if hasattr(las_data, 'classification'):
-                        classification_counts = {}
-                        for classification in las_data.classification:
-                            classification_counts[classification] = classification_counts.get(classification, 0) + 1
+                        # Extract return counts using numpy bincount (much faster than loops)
+                        if hasattr(las_data, 'return_num'):
+                            try:
+                                return_counts = numpy.bincount(las_data.return_num.astype(numpy.int32))
+                                file_info.returns_1 = int(return_counts[1]) if len(return_counts) > 1 else 0
+                                file_info.returns_2 = int(return_counts[2]) if len(return_counts) > 2 else 0
+                                file_info.returns_3 = int(return_counts[3]) if len(return_counts) > 3 else 0
+                                file_info.returns_4 = int(return_counts[4]) if len(return_counts) > 4 else 0
+                                file_info.returns_5 = int(return_counts[5]) if len(return_counts) > 5 else 0
+                                logger.debug(f"Return counts: R1={file_info.returns_1}, R2={file_info.returns_2}, R3={file_info.returns_3}, R4={file_info.returns_4}, R5={file_info.returns_5}")
+                            except Exception as e:
+                                logger.debug(f"Error counting returns: {str(e)}")
                         
-                        # LAS classification codes
-                        file_info.classification_unclassified = classification_counts.get(0, 0)
-                        file_info.classification_ground = classification_counts.get(2, 0)
-                        file_info.classification_low_vegetation = classification_counts.get(3, 0)
-                        file_info.classification_medium_vegetation = classification_counts.get(4, 0)
-                        file_info.classification_high_vegetation = classification_counts.get(5, 0)
-                        file_info.classification_building = classification_counts.get(6, 0)
-                        file_info.classification_water = classification_counts.get(9, 0)
-                        file_info.classification_noise = classification_counts.get(7, 0)
-                        file_info.classification_key_point = classification_counts.get(8, 0)
-                        file_info.classification_reserved = classification_counts.get(1, 0)
-                        logger.debug(f"Classification counts: Ground={file_info.classification_ground}, Vegetation={file_info.classification_low_vegetation + file_info.classification_medium_vegetation + file_info.classification_high_vegetation}")
-                    
-                    # Extract scan angle information
-                    if hasattr(las_data, 'scan_angle_rank'):
-                        file_info.scan_angle_min = float(las_data.scan_angle_rank.min())
-                        file_info.scan_angle_max = float(las_data.scan_angle_rank.max())
-                        logger.debug(f"Scan angle range: {file_info.scan_angle_min} to {file_info.scan_angle_max}")
+                        # Extract classification counts using numpy bincount (much faster than loops)
+                        if hasattr(las_data, 'classification'):
+                            try:
+                                classification_counts = numpy.bincount(las_data.classification.astype(numpy.int32))
+                                # LAS classification codes
+                                file_info.classification_unclassified = int(classification_counts[0]) if len(classification_counts) > 0 else 0
+                                file_info.classification_reserved = int(classification_counts[1]) if len(classification_counts) > 1 else 0
+                                file_info.classification_ground = int(classification_counts[2]) if len(classification_counts) > 2 else 0
+                                file_info.classification_low_vegetation = int(classification_counts[3]) if len(classification_counts) > 3 else 0
+                                file_info.classification_medium_vegetation = int(classification_counts[4]) if len(classification_counts) > 4 else 0
+                                file_info.classification_high_vegetation = int(classification_counts[5]) if len(classification_counts) > 5 else 0
+                                file_info.classification_building = int(classification_counts[6]) if len(classification_counts) > 6 else 0
+                                file_info.classification_noise = int(classification_counts[7]) if len(classification_counts) > 7 else 0
+                                file_info.classification_key_point = int(classification_counts[8]) if len(classification_counts) > 8 else 0
+                                file_info.classification_water = int(classification_counts[9]) if len(classification_counts) > 9 else 0
+                                logger.debug(f"Classification counts: Ground={file_info.classification_ground}, Vegetation={file_info.classification_low_vegetation + file_info.classification_medium_vegetation + file_info.classification_high_vegetation}")
+                            except Exception as e:
+                                logger.debug(f"Error counting classifications: {str(e)}")
+                        
+                        # Extract scan angle information
+                        if hasattr(las_data, 'scan_angle_rank'):
+                            try:
+                                file_info.scan_angle_min = float(numpy.min(las_data.scan_angle_rank))
+                                file_info.scan_angle_max = float(numpy.max(las_data.scan_angle_rank))
+                                logger.debug(f"Scan angle range: {file_info.scan_angle_min} to {file_info.scan_angle_max}")
+                            except Exception as e:
+                                logger.debug(f"Error extracting scan angles: {str(e)}")
+                    else:
+                        # Only read if needed for convex hull
+                        if self.use_detailed_acreage:
+                            las_data = las_file.read()
+                        else:
+                            las_data = None
+                        logger.debug(f"Skipping classification extraction (extract_classifications={self.extract_classifications})")
                     
                 except Exception as e:
                     logger.warning(f"Error extracting point data: {str(e)}")
+                    las_data = None
                 
                 # Calculate point density
                 if file_info.min_x != file_info.max_x and file_info.min_y != file_info.max_y and file_info.point_count > 0:
@@ -377,7 +391,7 @@ class PythonLASProcessor:
                 # Calculate convex hull acreage if requested
                 if self.use_detailed_acreage and HAS_SCIPY and HAS_NUMPY:
                     logger.info(f"Calculating convex hull acreage for {filepath.name}")
-                    self._calculate_convex_hull_acreage(filepath, file_info, progress_callback)
+                    self._calculate_convex_hull_acreage(filepath, file_info, progress_callback, las_data=las_data)
                     logger.info(f"Convex hull result: acreage_detailed={file_info.acreage_detailed:.2f}")
                 else:
                     logger.debug(f"Skipping convex hull calculation (use_detailed_acreage={self.use_detailed_acreage}, HAS_SCIPY={HAS_SCIPY}, HAS_NUMPY={HAS_NUMPY})")
@@ -636,7 +650,7 @@ class PythonLASProcessor:
         return "\n".join(summary_lines)
     
     def _calculate_convex_hull_acreage(self, filepath: Path, file_info: LASFileInfo, 
-                                     progress_callback: Optional[Callable] = None) -> None:
+                                     progress_callback: Optional[Callable] = None, las_data=None) -> None:
         """
         Calculate convex hull acreage using scipy and numpy.
         
@@ -659,11 +673,15 @@ class PythonLASProcessor:
             if progress_callback:
                 progress_callback("sub_progress", "dummy", f"Reading {filepath.name} ({file_size_mb:.0f}MB) for convex hull calculation...")
             
-            with laspy.open(filepath) as las_file:
-                # Read all points
-                las_data = las_file.read()
+            if las_data is None:
+                with laspy.open(filepath) as las_file:
+                    # Read all points
+                    las_data = las_file.read()
+                    point_count = len(las_data)
+                    logger.debug(f"Loaded {point_count:,} points from LAS file")
+            else:
                 point_count = len(las_data)
-                logger.debug(f"Loaded {point_count:,} points from LAS file")
+                logger.debug(f"Using provided las_data for convex hull calculation (point_count={point_count:,}")
                 
                 if point_count == 0:
                     logger.warning(f"No points found in {filepath.name}")
